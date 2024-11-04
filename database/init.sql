@@ -21,12 +21,12 @@ BEGIN
 END;$$;
 
 CREATE OR REPLACE PROCEDURE find_guests (
-  name varchar(200)
+  guest_name varchar(200)
 )
 LANGUAGE PLPGSQL
 AS $$
 BEGIN
-  SELECT * FROM guests WHERE name ILIKE CONCAT('%', name, '%');
+  SELECT * FROM guests WHERE guests.name ILIKE CONCAT('%', guest_name, '%');
   commit;
 END;$$;
 
@@ -359,6 +359,34 @@ LANGUAGE PLPGSQL
 AS $$
 BEGIN
   UPDATE orders SET has_paid = true WHERE guest_id = guest_id AND item_id = item_id;
+  commit;
+END;$$;
+
+-- user creation
+
+CREATE OR REPLACE PROCEDURE create_user (
+  login varchar(50),
+  password varchar(50),
+  permission_level integer
+)
+LANGUAGE PLPGSQL
+AS $$
+BEGIN
+  IF permission_level = 0 THEN
+    EXECUTE FORMAT(
+      'CREATE USER %s WITH PASSWORD %L IN ROLE viewer', login, password
+    );
+  END IF;
+  IF permission_level = 1 THEN
+    EXECUTE FORMAT(
+      'CREATE USER %s WITH PASSWORD %L IN ROLE hostess', login, password
+    );
+  END IF;
+  IF permission_level = 2 THEN
+    EXECUTE FORMAT(
+      'CREATE USER %s WITH PASSWORD %L IN ROLE manager', login, password
+    );
+  END IF;
   commit;
 END;$$;
 
