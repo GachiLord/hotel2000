@@ -290,7 +290,7 @@ CREATE OR REPLACE PROCEDURE read_items_by_page (
 LANGUAGE PLPGSQL
 AS $$
 BEGIN
-  SELECT * FROM pricing OFFSET max(0, page - 1) LIMIT 20;
+  SELECT * FROM pricing OFFSET (max(0, page - 1) * 20) LIMIT 20;
   commit;
 END;$$;
 
@@ -392,10 +392,21 @@ END;$$;
 
 -- permissions 
 
+GRANT SELECT ON TABLE guests TO viewer;
+GRANT SELECT ON TABLE pricing TO viewer;
+
 GRANT EXECUTE ON PROCEDURE find_guests TO viewer;
 GRANT EXECUTE ON PROCEDURE read_guest TO viewer;
 GRANT EXECUTE ON PROCEDURE read_items_by_page TO viewer;
 
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE guests TO hostess;
+GRANT SELECT ON TABLE employees TO hostess;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE keys TO hostess;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE rooms_keys TO hostess;
+GRANT SELECT ON TABLE rooms TO hostess;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE rooms_guests TO hostess;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE orders TO hostess;
 
 GRANT EXECUTE ON PROCEDURE create_guest TO hostess;
 GRANT EXECUTE ON PROCEDURE find_guests TO hostess;
