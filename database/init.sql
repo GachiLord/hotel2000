@@ -20,24 +20,24 @@ BEGIN
   commit;
 END;$$;
 
-CREATE OR REPLACE PROCEDURE find_guests (
+CREATE OR REPLACE FUNCTION find_guests (
   guest_name varchar(200)
 )
+RETURNS SETOF guests
 LANGUAGE PLPGSQL
 AS $$
 BEGIN
-  SELECT * FROM guests WHERE guests.name ILIKE CONCAT('%', guest_name, '%');
-  commit;
+  RETURN QUERY SELECT * FROM guests WHERE guests.name ILIKE CONCAT('%', guest_name, '%');
 END;$$;
 
-CREATE OR REPLACE PROCEDURE read_guest (
+CREATE OR REPLACE FUNCTION read_guest (
   guest_id int
 )
+RETURNS SETOF guests
 LANGUAGE PLPGSQL
 AS $$
 BEGIN
-  SELECT * FROM guests WHERE guest_id = guest_id;
-  commit;
+  RETURN QUERY SELECT * FROM guests WHERE guest_id = guest_id;
 END;$$;
 
 CREATE OR REPLACE PROCEDURE update_guest (
@@ -85,24 +85,24 @@ BEGIN
   commit;
 END;$$;
 
-CREATE OR REPLACE PROCEDURE find_employees (
+CREATE OR REPLACE FUNCTION find_employees (
   name varchar(200)
 )
+RETURNS SETOF employees
 LANGUAGE PLPGSQL
 AS $$
 BEGIN
-  SELECT * FROM employees WHERE name ILIKE CONCAT('%', name, '%');
-  commit;
+  RETURN QUERY SELECT * FROM employees WHERE name ILIKE CONCAT('%', name, '%');
 END;$$;
 
-CREATE OR REPLACE PROCEDURE read_employee (
+CREATE OR REPLACE FUNCTION read_employee (
   employee_id int
 )
+RETURNS SETOF employees
 LANGUAGE PLPGSQL
 AS $$
 BEGIN
-  SELECT * FROM employees WHERE employee_id = employee_id;
-  commit;
+  RETURN QUERY SELECT * FROM employees WHERE employee_id = employee_id;
 END;$$;
 
 CREATE OR REPLACE PROCEDURE update_employee (
@@ -235,12 +235,17 @@ CREATE TABLE IF NOT EXISTS rooms_guests (
 );
 
 
-CREATE OR REPLACE PROCEDURE find_free_rooms()
+CREATE OR REPLACE FUNCTION find_free_rooms(
+  occupancy int
+)
+RETURNS SETOF rooms
 LANGUAGE PLPGSQL
 AS $$
 BEGIN
-  SELECT room_id FROM rooms WHERE room_id NOT IN (SELECT room_id FROM rooms_guests);
-  commit;
+  RETURN QUERY 
+    SELECT * FROM rooms 
+    WHERE room_id NOT IN (SELECT room_id FROM rooms_guests)
+    AND rooms.occupancy >= find_free_rooms.occupancy LIMIT 10;
 END;$$;
 
 CREATE OR REPLACE PROCEDURE check_in_guest (
@@ -284,14 +289,14 @@ BEGIN
   commit;
 END;$$;
 
-CREATE OR REPLACE PROCEDURE read_items_by_page (
+CREATE OR REPLACE FUNCTION read_items_by_page (
   page int
 )
+RETURNS SETOF pricing
 LANGUAGE PLPGSQL
 AS $$
 BEGIN
-  SELECT * FROM pricing OFFSET (max(0, page - 1) * 20) LIMIT 20;
-  commit;
+  RETURN QUERY SELECT * FROM pricing OFFSET (max(0, page - 1) * 20) LIMIT 20;
 END;$$;
 
 CREATE OR REPLACE PROCEDURE update_item (
@@ -339,16 +344,16 @@ BEGIN
   commit;
 END;$$;
 
-CREATE OR REPLACE PROCEDURE read_guest_orders (
+CREATE OR REPLACE FUNCTION read_guest_orders (
   guest_id int
 )
+RETURNS SETOF pricing
 LANGUAGE PLPGSQL
 AS $$
 BEGIN
-  SELECT pricing.title, pricing.price, orders.has_paid FROM pricing 
+  RETURN QUERY SELECT pricing.title, pricing.price, orders.has_paid FROM pricing 
     INNER JOIN orders ON orders.item_id = pricing.item_id
     WHERE orders.guest_id = guest_id;
-  commit;
 END;$$;
 
 CREATE OR REPLACE PROCEDURE pay_order (
@@ -395,9 +400,9 @@ END;$$;
 GRANT SELECT ON TABLE guests TO viewer;
 GRANT SELECT ON TABLE pricing TO viewer;
 
-GRANT EXECUTE ON PROCEDURE find_guests TO viewer;
-GRANT EXECUTE ON PROCEDURE read_guest TO viewer;
-GRANT EXECUTE ON PROCEDURE read_items_by_page TO viewer;
+GRANT EXECUTE ON FUNCTION find_guests TO viewer;
+GRANT EXECUTE ON FUNCTION read_guest TO viewer;
+GRANT EXECUTE ON FUNCTION read_items_by_page TO viewer;
 
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE guests TO hostess;
@@ -409,21 +414,21 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE rooms_guests TO hostess;
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE orders TO hostess;
 
 GRANT EXECUTE ON PROCEDURE create_guest TO hostess;
-GRANT EXECUTE ON PROCEDURE find_guests TO hostess;
-GRANT EXECUTE ON PROCEDURE read_guest TO hostess;
+GRANT EXECUTE ON FUNCTION find_guests TO hostess;
+GRANT EXECUTE ON FUNCTION read_guest TO hostess;
 GRANT EXECUTE ON PROCEDURE update_guest TO hostess;
 GRANT EXECUTE ON PROCEDURE delete_guest TO hostess;
-GRANT EXECUTE ON PROCEDURE find_employees TO hostess;
-GRANT EXECUTE ON PROCEDURE read_employee TO hostess;
+GRANT EXECUTE ON FUNCTION find_employees TO hostess;
+GRANT EXECUTE ON FUNCTION read_employee TO hostess;
 GRANT EXECUTE ON PROCEDURE create_key TO hostess;
 GRANT EXECUTE ON PROCEDURE delete_key TO hostess;
 GRANT EXECUTE ON PROCEDURE assign_key TO hostess;
 GRANT EXECUTE ON PROCEDURE revoke_key TO hostess;
-GRANT EXECUTE ON PROCEDURE find_free_rooms TO hostess;
+GRANT EXECUTE ON FUNCTION find_free_rooms(occupancy int) TO hostess;
 GRANT EXECUTE ON PROCEDURE check_in_guest TO hostess;
 GRANT EXECUTE ON PROCEDURE check_out_guests TO hostess;
 GRANT EXECUTE ON PROCEDURE create_order TO hostess;
-GRANT EXECUTE ON PROCEDURE read_guest_orders TO hostess;
+GRANT EXECUTE ON FUNCTION read_guest_orders TO hostess;
 GRANT EXECUTE ON PROCEDURE pay_order TO hostess;
 
 
