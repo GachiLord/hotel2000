@@ -1,6 +1,7 @@
 CFLAGS = `pkg-config --cflags gtk4` \
 		`pkg-config --libs gtk4` \
 		`pkg-config --libs libpq` \
+		-lm \
 
 
 run: build
@@ -9,12 +10,19 @@ run: build
 build:
 	clear
 	mkdir -p target
-	gcc $(CFLAGS) \
-		-o ./target/hotel2000 ./src/* \
+	clang $(CFLAGS) \
+		-o ./target/hotel2000 ./src/*.c \
 
 debug:
 	clear
 	mkdir -p target
-	gcc $(CFLAGS) \
+	clang $(CFLAGS) \
 		-g \
-		-o ./target/hotel2000 ./src/* \
+		-o ./target/hotel2000 ./src/*.c \
+
+anal:
+	clear
+	mkdir -p target
+	clang $(CFLAGS) \
+		./src/*.c \
+		--analyze \

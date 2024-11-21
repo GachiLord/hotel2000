@@ -11,6 +11,6 @@ struct {
   char *database;
 } typedef DbState;
 
-int dbConnect();
+int db_connect();
 
-void initDbState();
+void init_db_state();

@@ -7,12 +7,12 @@ extern GtkStack *APP_STACK;
 extern DbState *DB_STATE;
 
 static void login_handler(GtkWidget *widget, gpointer data) {
-  if (dbConnect() == 0) {
+  if (db_connect() == 0) {
     gtk_stack_set_visible_child_name(APP_STACK, "home");
-    g_print("connected to db %s", DB_STATE->database);
-    showToast("Вход в систему");
+    g_print("connected to db %s\n", DB_STATE->database);
+    show_toast("Вход в систему");
   } else {
-    showToast("Неверный логин или пароль");
+    show_toast("Неверный логин или пароль");
   }
 }
 
@@ -42,7 +42,7 @@ static void host_handler(GtkWidget *widget, gpointer data) { DB_HANDLER(host) }
 static void database_handler(GtkWidget *widget,
                              gpointer data){DB_HANDLER(database)}
 
-GtkWidget *initLoginPage() {
+GtkWidget *init_login_page() {
   // init dialog
   GtkWidget *box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 8);
   gtk_widget_set_halign(box, GTK_ALIGN_CENTER);

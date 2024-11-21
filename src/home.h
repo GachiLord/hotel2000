@@ -1,3 +1,3 @@
 #include <gtk/gtk.h>
 
-GtkWidget *initHomePage();
+GtkWidget *init_home_page();

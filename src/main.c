@@ -24,7 +24,7 @@ static void activate(GtkApplication *app, gpointer user_data) {
                                              GTK_STYLE_PROVIDER_PRIORITY_USER);
   // init pages
   APP_OVERLAY = gtk_overlay_new();
-  APP_STACK = initHomePage();
+  APP_STACK = init_home_page();
   gtk_overlay_set_child(GTK_OVERLAY(APP_OVERLAY), APP_STACK);
   gtk_window_set_child(GTK_WINDOW(APP_WINDOW), APP_OVERLAY);
 
@@ -33,7 +33,7 @@ static void activate(GtkApplication *app, gpointer user_data) {
 
 int main(int argc, char **argv) {
   // init db state
-  initDbState();
+  init_db_state();
   // gtk
   GtkApplication *app;
   int status;

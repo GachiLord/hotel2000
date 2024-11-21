@@ -1,3 +1,3 @@
 #include <gtk/gtk.h>
 
-GtkWidget *checkInPage();
+GtkWidget *check_in_page();

@@ -1,3 +1,3 @@
 #include <gtk/gtk.h>
 
-GtkWidget *initLoginPage();
+GtkWidget *init_login_page();
