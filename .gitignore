@@ -1,5 +1,6 @@
-target
+hotel2000
 .clangd
 *.plist
 *.pch
 *.gch
+*.o

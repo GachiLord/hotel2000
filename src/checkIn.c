@@ -20,7 +20,7 @@ struct {
 } typedef RoomArray;
 
 static void free_room_array(RoomArray *r) {
-  for (int i = 0; i < r->len; i++) {
+  for (gsize i = 0; i < r->len; i++) {
     g_free(r->rooms[i].room_id);
     g_free(r->rooms[i].occupancy);
   }
@@ -41,7 +41,7 @@ static RoomArray *get_free_rooms(int occupancy) {
   // create Room structs
   gsize r_len = PQntuples(res);
   Room *rooms = g_malloc(sizeof(Room) * r_len);
-  for (int i = 0; i < r_len; i++) {
+  for (gsize i = 0; i < r_len; i++) {
     rooms[i].room_id = g_strdup(PQgetvalue(res, i, 0));
     rooms[i].occupancy = g_strdup(PQgetvalue(res, i, 1));
   }
@@ -72,7 +72,7 @@ static void handle_search(GtkWidget *widget, gpointer state) {
     gtk_widget_set_visible(s->frame, true);
   }
 
-  for (int i = 0; i < rooms->len; i++) {
+  for (gsize i = 0; i < rooms->len; i++) {
     char *text;
     asprintf(&text, "Номер: %s\t\t\tВместимость: %s", rooms->rooms[i].room_id,
              rooms->rooms[i].occupancy);
