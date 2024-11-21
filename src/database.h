@@ -14,3 +14,4 @@ struct {
 int db_connect();
 
 void init_db_state();
+void free_db_state();

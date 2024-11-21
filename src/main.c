@@ -31,6 +31,12 @@ static void activate(GtkApplication *app, gpointer user_data) {
   gtk_window_present(GTK_WINDOW(APP_WINDOW));
 }
 
+void window_removed(GtkApplication *self, GtkWindow *window,
+                    gpointer user_data) {
+  // free app's resources
+  free_db_state();
+}
+
 int main(int argc, char **argv) {
   // init db state
   init_db_state();
@@ -41,6 +47,7 @@ int main(int argc, char **argv) {
   app = gtk_application_new("com.github.GachiLord.hotel2000",
                             G_APPLICATION_DEFAULT_FLAGS);
   g_signal_connect(app, "activate", G_CALLBACK(activate), NULL);
+  g_signal_connect(app, "window-removed", G_CALLBACK(window_removed), NULL);
   status = g_application_run(G_APPLICATION(app), argc, argv);
   g_object_unref(app);
 
