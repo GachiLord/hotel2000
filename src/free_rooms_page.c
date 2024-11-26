@@ -73,12 +73,27 @@ static void handle_search(GtkWidget *widget, gpointer state) {
   }
 
   for (gsize i = 0; i < rooms->len; i++) {
-    char *text;
-    asprintf(&text, "Номер: %s\t\t\tВместимость: %s", rooms->rooms[i].room_id,
-             rooms->rooms[i].occupancy);
-    GtkWidget *item = gtk_label_new(text);
-    g_free(text);
-    gtk_widget_set_size_request(item, 300, 50);
+    // format strings for labels
+    char *room;
+    char *occupancy;
+    asprintf(&room, "Номер: %s", rooms->rooms[i].room_id);
+    asprintf(&occupancy, "Вместимость: %s", rooms->rooms[i].occupancy);
+
+    GtkWidget *room_l = gtk_label_new(room);
+    g_free(room);
+    gtk_widget_set_margin_start(room_l, 20);
+
+    GtkWidget *occupancy_l = gtk_label_new(occupancy);
+    g_free(occupancy);
+    gtk_widget_set_margin_end(occupancy_l, 20);
+
+    // add item to the list
+    GtkWidget *item = gtk_center_box_new();
+
+    gtk_center_box_set_start_widget(GTK_CENTER_BOX(item), room_l);
+    gtk_center_box_set_end_widget(GTK_CENTER_BOX(item), occupancy_l);
+
+    gtk_widget_set_size_request(item, 500, 50);
     gtk_widget_set_halign(item, GTK_ALIGN_CENTER);
     gtk_list_box_append(GTK_LIST_BOX(s->list), item);
   }
@@ -92,7 +107,7 @@ static void handle_occpancy(GtkWidget *widget, gpointer state) {
 
 // ui
 
-GtkWidget *check_in_page() {
+GtkWidget *free_rooms_page() {
   // main containers
   GtkWidget *box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
   GtkWidget *list = gtk_list_box_new();
@@ -101,7 +116,6 @@ GtkWidget *check_in_page() {
   gtk_frame_set_child(GTK_FRAME(frame), list);
   gtk_widget_set_halign(frame, GTK_ALIGN_CENTER);
   gtk_list_box_set_selection_mode(GTK_LIST_BOX(list), GTK_SELECTION_NONE);
-  gtk_widget_set_halign(list, GTK_ALIGN_CENTER);
   gtk_box_append(GTK_BOX(box), frame);
 
   // state

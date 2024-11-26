@@ -7,15 +7,21 @@ extern GtkWidget *APP_OVERLAY;
 extern DbState *DB_STATE;
 static GtkWidget *TOAST;
 
+// Structs
+
+// UI
+
 static gboolean remove_overlay() {
   gtk_overlay_remove_overlay(GTK_OVERLAY(APP_OVERLAY), TOAST);
   TOAST = NULL;
   return false;
 }
 
-void show_toast(const char *const text) {
-  if (TOAST != NULL)
+void show_toast(const char *text) {
+  if (TOAST != NULL) {
+    gtk_label_set_text(GTK_LABEL(TOAST), text);
     return;
+  }
 
   TOAST = gtk_label_new(text);
   // apply css
@@ -29,7 +35,8 @@ void show_toast(const char *const text) {
 }
 
 int handle_db_error(PGresult *res, const char *const err_msg) {
-  if (PQresultStatus(res) != PGRES_TUPLES_OK) {
+  int c = PQresultStatus(res);
+  if (c != PGRES_TUPLES_OK && c != PGRES_COMMAND_OK) {
     g_printerr("Query failed: %s", PQerrorMessage(DB_STATE->conn));
     show_toast(err_msg);
     PQclear(res);
