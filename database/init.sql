@@ -26,7 +26,7 @@ RETURNS SETOF guests
 LANGUAGE PLPGSQL
 AS $$
 BEGIN
-  RETURN QUERY SELECT * FROM guests WHERE guests.name ILIKE '%' || guest_name || '%';
+  RETURN QUERY SELECT * FROM guests WHERE guests.name ILIKE '%' || guest_name || '%' LIMIT 20;
 END;$$;
 
 CREATE OR REPLACE FUNCTION read_guest (

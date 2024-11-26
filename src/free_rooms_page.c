@@ -66,8 +66,10 @@ static void handle_search(GtkWidget *widget, gpointer state) {
   RoomArray *rooms = get_free_rooms(s->occupancy);
   gtk_list_box_remove_all(GTK_LIST_BOX(s->list));
 
-  if (rooms->len == 0) {
+  if (rooms == NULL || rooms->len == 0) {
     gtk_widget_set_visible(s->frame, false);
+    free_room_array(rooms);
+    return;
   } else {
     gtk_widget_set_visible(s->frame, true);
   }
@@ -104,6 +106,8 @@ static void handle_occpancy(GtkWidget *widget, gpointer state) {
   WidgetState *s = (WidgetState *)state;
   s->occupancy = gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(widget));
 }
+
+static void handle_destroy(GtkWidget *_, gpointer data) { g_free(data); }
 
 // ui
 
@@ -143,6 +147,8 @@ GtkWidget *free_rooms_page() {
   gtk_widget_set_halign(button, GTK_ALIGN_CENTER);
   g_signal_connect(button, "clicked", G_CALLBACK(handle_search), state);
   gtk_box_prepend(GTK_BOX(wrap), button);
+
+  g_signal_connect(box, "destroy", G_CALLBACK(handle_destroy), state);
 
   return box;
 }
