@@ -2,32 +2,31 @@
 
 CREATE TABLE IF NOT EXISTS guests (
   guest_id SERIAL PRIMARY KEY,
-  name varchar(200) NOT NULL,
-  passport varchar(50) NOT NULL,
-  phone varchar(50) NOT NULL
+  name varchar(50) NOT NULL,
+  passport varchar(30) NOT NULL,
+  phone varchar(30) NOT NULL
 );
 
 
 CREATE OR REPLACE PROCEDURE create_guest (
-  name varchar(200),
-  passport varchar(50),
-  phone varchar(50)
+  name varchar(50),
+  passport varchar(30),
+  phone varchar(30)
 )
 LANGUAGE PLPGSQL
 AS $$
 BEGIN
   INSERT INTO guests(name, passport, phone) VALUES (name, passport, phone);
-  commit;
 END;$$;
 
 CREATE OR REPLACE FUNCTION find_guests (
-  guest_name varchar(200)
+  guest_name varchar(50)
 )
 RETURNS SETOF guests
 LANGUAGE PLPGSQL
 AS $$
 BEGIN
-  RETURN QUERY SELECT * FROM guests WHERE guests.name ILIKE CONCAT('%', guest_name, '%');
+  RETURN QUERY SELECT * FROM guests WHERE guests.name ILIKE '%' || guest_name || '%' LIMIT 20;
 END;$$;
 
 CREATE OR REPLACE FUNCTION read_guest (
@@ -42,15 +41,14 @@ END;$$;
 
 CREATE OR REPLACE PROCEDURE update_guest (
   guest_id int,
-  name varchar(200),
-  passport varchar(50),
-  phone varchar(50)
+  name varchar(50),
+  passport varchar(30),
+  phone varchar(30)
 )
 LANGUAGE PLPGSQL
 AS $$
 BEGIN
   UPDATE guests SET name = name, passport = passport, phone = phone WHERE guest_id = guest_id;
-  commit;
 END;$$;
 
 CREATE OR REPLACE PROCEDURE delete_guest (
@@ -60,39 +58,58 @@ LANGUAGE PLPGSQL
 AS $$
 BEGIN
   DELETE FROM guests WHERE guest_id = guest_id;
-  commit;
 END;$$;
+
+-- guest journal
+
+CREATE TABLE IF NOT EXISTS guest_journal (
+  guest_id integer,
+  is_check_in Boolean,
+  created_at timestamp DEFAULT current_date,
+  FOREIGN KEY(guest_id) REFERENCES guests(guest_id) ON DELETE SET NULL
+);
+
+CREATE OR REPLACE PROCEDURE create_journal_record (
+  guest_id integer,
+  is_check_in Boolean
+)
+LANGUAGE PLPGSQL
+AS $$
+BEGIN
+  INSERT INTO guest_journal(guest_id, is_check_in) VALUES (guest_id, is_check_in);
+END;$$;
+
+-- TODO: add read/analyze functions
 
 -- employees
  
 CREATE TABLE IF NOT EXISTS employees (
   employee_id SERIAL PRIMARY KEY,
-  name varchar(200) NOT NULL,
-  passport varchar(50) NOT NULL,
-  phone varchar(50) NOT NULL
+  name varchar(50) NOT NULL,
+  passport varchar(30) NOT NULL,
+  phone varchar(30) NOT NULL
 );
 
 
 CREATE OR REPLACE PROCEDURE create_employee (
-  name varchar(200),
-  passport varchar(50),
-  phone varchar(50)
+  name varchar(50),
+  passport varchar(30),
+  phone varchar(30)
 )
 LANGUAGE PLPGSQL
 AS $$
 BEGIN
   INSERT INTO employees(name, passport, phone) VALUES (name, passport, phone);
-  commit;
 END;$$;
 
 CREATE OR REPLACE FUNCTION find_employees (
-  name varchar(200)
+  name varchar(50)
 )
 RETURNS SETOF employees
 LANGUAGE PLPGSQL
 AS $$
 BEGIN
-  RETURN QUERY SELECT * FROM employees WHERE name ILIKE CONCAT('%', name, '%');
+  RETURN QUERY SELECT * FROM employees WHERE name ILIKE '%' || name || '%';
 END;$$;
 
 CREATE OR REPLACE FUNCTION read_employee (
@@ -107,15 +124,14 @@ END;$$;
 
 CREATE OR REPLACE PROCEDURE update_employee (
   employee_id int,
-  name varchar(200),
-  passport varchar(50),
-  phone varchar(50)
+  name varchar(50),
+  passport varchar(30),
+  phone varchar(30)
 )
 LANGUAGE PLPGSQL
 AS $$
 BEGIN
   UPDATE employees SET name = name, passport = passport, phone = phone WHERE employee_id = employee_id;
-  commit;
 END;$$;
 
 CREATE OR REPLACE PROCEDURE delete_employee (
@@ -125,7 +141,6 @@ LANGUAGE PLPGSQL
 AS $$
 BEGIN
   DELETE FROM employees WHERE employee_id = employee_id;
-  commit;
 END;$$;
 
 
@@ -152,7 +167,6 @@ LANGUAGE PLPGSQL
 AS $$
 BEGIN
   INSERT INTO keys(key_id, secret) VALUES(key_id, secret);
-  commit;
 END;$$;
 
 CREATE OR REPLACE PROCEDURE delete_key(
@@ -162,7 +176,6 @@ LANGUAGE PLPGSQL
 AS $$
 BEGIN
   DELETE FROM keys WHERE key_id = key_id;
-  commit;
 END;$$;
 
 -- rooms-keys
@@ -182,7 +195,6 @@ LANGUAGE PLPGSQL
 AS $$
 BEGIN
   INSERT INTO rooms_keys(key_id, room_id) VALUES(key_id, room_id);
-  commit;
 END;$$;
 
 CREATE OR REPLACE PROCEDURE revoke_key(
@@ -192,7 +204,6 @@ LANGUAGE PLPGSQL
 AS $$
 BEGIN
   DELETE FROM rooms_keys WHERE key_id = key_id;
-  commit;
 END;$$;
 
 -- employees-keys
@@ -212,7 +223,6 @@ LANGUAGE PLPGSQL
 AS $$
 BEGIN
   INSERT INTO employees_keys(key_id, employee_id) VALUES(key_id, employee_id);
-  commit;
 END;$$;
 
 CREATE OR REPLACE PROCEDURE revoke_employee_key(
@@ -222,7 +232,6 @@ LANGUAGE PLPGSQL
 AS $$
 BEGIN
   DELETE FROM employees_keys WHERE key_id = key_id;
-  commit;
 END;$$;
 
 -- rooms-guests
@@ -245,7 +254,7 @@ BEGIN
   RETURN QUERY 
     SELECT * FROM rooms 
     WHERE room_id NOT IN (SELECT room_id FROM rooms_guests)
-    AND rooms.occupancy >= find_free_rooms.occupancy LIMIT 10;
+    AND rooms.occupancy >= find_free_rooms.occupancy ORDER BY rooms.occupancy ASC LIMIT 10;
 END;$$;
 
 CREATE OR REPLACE PROCEDURE check_in_guest (
@@ -256,7 +265,6 @@ LANGUAGE PLPGSQL
 AS $$
 BEGIN
   INSERT INTO rooms_guests(guest_id, room_id) VALUES(guest_id, room_id);
-  commit;
 END;$$;
 
 CREATE OR REPLACE PROCEDURE check_out_guests(
@@ -266,15 +274,13 @@ LANGUAGE PLPGSQL
 AS $$
 BEGIN
   DELETE FROM rooms_guests WHERE room_id = room_id;
-  commit;
 END;$$;
 
 -- pricing
 
 CREATE TABLE IF NOT EXISTS pricing (
   item_id SERIAL PRIMARY KEY,
-  title varchar(200) NOT NULL,
-  price money NOT NULL
+  title varchar(200) NOT NULL
 );
 
 
@@ -286,7 +292,6 @@ LANGUAGE PLPGSQL
 AS $$
 BEGIN
   INSERT INTO pricing(title, price) VALUES (title, price);
-  commit;
 END;$$;
 
 CREATE OR REPLACE FUNCTION read_items_by_page (
@@ -308,7 +313,6 @@ LANGUAGE PLPGSQL
 AS $$
 BEGIN
   UPDATE pricing SET title = title, price = price WHERE item_id = item_id;
-  commit;
 END;$$;
 
 CREATE OR REPLACE PROCEDURE delete_item (
@@ -318,7 +322,6 @@ LANGUAGE PLPGSQL
 AS $$
 BEGIN
   DELETE FROM pricing WHERE item_id = item_id;
-  commit;
 END;$$;
 
 
@@ -328,8 +331,10 @@ CREATE TABLE IF NOT EXISTS orders (
   has_paid Boolean NOT NULL DEFAULT false,
   guest_id int NOT NULL,
   item_id int NOT NULL,
-  FOREIGN KEY(guest_id) REFERENCES guests(guest_id) ON DELETE CASCADE,
-  FOREIGN KEY(item_id) REFERENCES pricing(item_id) ON DELETE CASCADE
+  price money NOT NULL,
+  created_at timestamp,
+  FOREIGN KEY(guest_id) REFERENCES guests(guest_id) ON DELETE SET NULL,
+  FOREIGN KEY(item_id) REFERENCES pricing(item_id) ON DELETE SET NULL
 );
 
 
@@ -341,7 +346,6 @@ LANGUAGE PLPGSQL
 AS $$
 BEGIN
   INSERT INTO orders(guest_id, item_id) VALUES(guest_id, item_id);
-  commit;
 END;$$;
 
 CREATE OR REPLACE FUNCTION read_guest_orders (
@@ -364,7 +368,6 @@ LANGUAGE PLPGSQL
 AS $$
 BEGIN
   UPDATE orders SET has_paid = true WHERE guest_id = guest_id AND item_id = item_id;
-  commit;
 END;$$;
 
 -- user creation
@@ -392,7 +395,6 @@ BEGIN
       'CREATE USER %s WITH PASSWORD %L IN ROLE manager', login, password
     );
   END IF;
-  commit;
 END;$$;
 
 -- permissions 
@@ -412,12 +414,14 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE rooms_keys TO hostess;
 GRANT SELECT ON TABLE rooms TO hostess;
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE rooms_guests TO hostess;
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE orders TO hostess;
+GRANT SELECT, INSERT ON TABLE guest_journal TO hostess;
 
 GRANT EXECUTE ON PROCEDURE create_guest TO hostess;
 GRANT EXECUTE ON FUNCTION find_guests TO hostess;
 GRANT EXECUTE ON FUNCTION read_guest TO hostess;
 GRANT EXECUTE ON PROCEDURE update_guest TO hostess;
 GRANT EXECUTE ON PROCEDURE delete_guest TO hostess;
+GRANT EXECUTE ON PROCEDURE create_journal_record TO hostess;
 GRANT EXECUTE ON FUNCTION find_employees TO hostess;
 GRANT EXECUTE ON FUNCTION read_employee TO hostess;
 GRANT EXECUTE ON PROCEDURE create_key TO hostess;

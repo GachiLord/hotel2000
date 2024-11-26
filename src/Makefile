@@ -23,6 +23,9 @@ $(TARGET): $(OBJS)
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
+debug:
+	$(CC) $(CFLAGS) -g ./*.c -o $(TARGET)
+
 anal: all
 	$(CC) $(CFLAGS) --analyze 
 

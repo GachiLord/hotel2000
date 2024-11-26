@@ -21,33 +21,21 @@ static void exit_nicely() {
 }
 
 void init_db_state() {
-  // allocate fields
-  DB_STATE = g_malloc(sizeof(DbState));
-  DB_STATE->user = g_malloc(25);
-  DB_STATE->password = g_malloc(25);
-  DB_STATE->port = g_malloc(25);
-  DB_STATE->host = g_malloc(25);
-  DB_STATE->database = g_malloc(25);
   // pass initial values TODO: use persisted values
-  g_stpcpy(DB_STATE->user, "postgres");
-  g_stpcpy(DB_STATE->password, "root");
-  g_stpcpy(DB_STATE->port, "5432");
-  g_stpcpy(DB_STATE->host, "localhost");
-  g_stpcpy(DB_STATE->database, "hotel2000");
+  DB_STATE = g_malloc(sizeof(DbState));
+  DB_STATE->user = g_strdup("postgres");
+  DB_STATE->password = g_strdup("root");
+  DB_STATE->port = g_strdup("5432");
+  DB_STATE->host = g_strdup("localhost");
+  DB_STATE->database = g_strdup("hotel2000");
 }
 
 int db_connect() {
   // create connection string
-  size_t len =
-      g_utf8_strlen("user=", -1) + g_utf8_strlen(DB_STATE->user, -1) +
-      g_utf8_strlen(" password=", -1) + g_utf8_strlen(DB_STATE->password, -1) +
-      g_utf8_strlen(" port=", -1) + g_utf8_strlen(DB_STATE->port, -1) +
-      g_utf8_strlen(" host=", -1) + g_utf8_strlen(DB_STATE->host, -1) +
-      g_utf8_strlen(" dbname=", -1) + g_utf8_strlen(DB_STATE->database, -1);
-  char *conn = g_malloc(len);
-  g_sprintf(conn, "user=%s password=%s port=%s host=%s dbname=%s",
-            DB_STATE->user, DB_STATE->password, DB_STATE->port, DB_STATE->host,
-            DB_STATE->database);
+  char *conn;
+  asprintf(&conn, "user=%s password=%s port=%s host=%s dbname=%s",
+           DB_STATE->user, DB_STATE->password, DB_STATE->port, DB_STATE->host,
+           DB_STATE->database);
   // start connection and save params
   DB_STATE->conn = PQconnectdb(conn);
   // free conn string
