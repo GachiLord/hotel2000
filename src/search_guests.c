@@ -2,29 +2,26 @@
 #include "database.h"
 #include <gtk/gtk.h>
 #include <libpq-fe.h>
-#include <stdio.h>
 
 // state
 
-struct {
+typedef struct {
   GtkWidget *list;
   GtkWidget *frame;
-} typedef WidgetState;
+} WidgetState;
 
 // logic
 
-extern DbState *DB_STATE;
-
-struct {
+typedef struct {
   char *name;
   char *passport;
   char *phone;
-} typedef Person;
+} Person;
 
-struct {
+typedef struct {
   Person *guests;
   gsize len;
-} typedef PersonArray;
+} PersonArray;
 
 static void free_person_array(PersonArray *arr) {
   for (gsize i = 0; i < arr->len; i++) {
@@ -75,7 +72,6 @@ static void handle_search(GtkWidget *widget, gpointer data) {
 
   if (guests == NULL || guests->len == 0) {
     gtk_widget_set_visible(s->frame, false);
-    free_person_array(guests);
     return;
   } else {
     gtk_widget_set_visible(s->frame, true);
@@ -111,7 +107,7 @@ static void handle_search(GtkWidget *widget, gpointer data) {
   free_person_array(guests);
 }
 
-static void handle_destroy(GtkWidget _, gpointer data) { g_free(data); }
+static void handle_destroy(GtkWidget *_, gpointer data) { g_free(data); }
 
 // UI
 
@@ -128,7 +124,7 @@ GtkWidget *search_guests_page() {
   gtk_box_append(GTK_BOX(box), frame);
 
   // state
-  WidgetState *state = malloc(sizeof(WidgetState));
+  WidgetState *state = g_malloc(sizeof(WidgetState));
   *state = (WidgetState){list, frame};
 
   // controls

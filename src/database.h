@@ -2,14 +2,14 @@
 
 #pragma once
 
-struct {
+typedef struct {
   PGconn *conn;
   char *user;
   char *password;
   char *port;
   char *host;
   char *database;
-} typedef DbState;
+} DbState;
 
 int db_connect();
 

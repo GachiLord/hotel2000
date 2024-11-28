@@ -151,6 +151,16 @@ CREATE TABLE IF NOT EXISTS rooms (
   occupancy integer
 );
 
+CREATE OR REPLACE FUNCTION read_rooms_by_page (
+  page int
+)
+RETURNS SETOF rooms
+LANGUAGE PLPGSQL
+AS $$
+BEGIN
+  RETURN QUERY SELECT * FROM rooms OFFSET ((SELECT * FROM GREATEST(0, page - 1)) * 20) LIMIT 20;
+END;$$;
+
 -- keys
 
 CREATE TABLE IF NOT EXISTS keys (

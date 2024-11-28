@@ -28,11 +28,11 @@ static int create_guest(const char *name, const char *phone,
 
 // state
 
-struct {
+typedef struct {
   GtkWidget *name;
   GtkWidget *phone;
   GtkWidget *passport;
-} typedef WidgetState;
+} WidgetState;
 
 // UI
 

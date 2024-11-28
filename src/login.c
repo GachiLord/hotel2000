@@ -4,7 +4,6 @@
 
 extern GtkWindow *APP_OVERLAY;
 extern GtkStack *APP_STACK;
-extern DbState *DB_STATE;
 
 static void login_handler(GtkWidget *widget, gpointer data) {
   if (db_connect() == 0) {

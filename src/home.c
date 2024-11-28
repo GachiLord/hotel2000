@@ -1,6 +1,6 @@
-#include "free_rooms_page.h"
 #include "guests.h"
 #include "login.h"
+#include "rooms.h"
 #include <gtk/gtk.h>
 
 GtkWidget *init_home_page() {
@@ -17,12 +17,12 @@ GtkWidget *init_home_page() {
   GtkWidget *main_stack = gtk_stack_new();
   // pages
   GtkWidget *free_rooms = free_rooms_page();
-  GtkWidget *rooms_search = gtk_label_new("Поиск номеров");
+  GtkWidget *read_rooms = read_rooms_page();
   GtkWidget *guest_create = create_guests_page();
   GtkWidget *guest_search = search_guests_page();
   gtk_stack_add_titled(GTK_STACK(main_stack), free_rooms, "free_rooms",
                        "Поиск номеров");
-  gtk_stack_add_titled(GTK_STACK(main_stack), rooms_search, "rooms_search",
+  gtk_stack_add_titled(GTK_STACK(main_stack), read_rooms, "read_rooms",
                        "Просмотр номеров");
   gtk_stack_add_titled(GTK_STACK(main_stack), guest_create, "create_guests",
                        "Регистрация гостей");

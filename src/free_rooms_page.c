@@ -1,32 +1,11 @@
 #include "common.h"
-#include "database.h"
+#include "rooms.h"
 #include <glib.h>
 #include <gtk/gtk.h>
 #include <libpq-fe.h>
 #include <stdio.h>
 
 // logic
-
-extern DbState *DB_STATE;
-
-struct {
-  char *room_id;
-  char *occupancy;
-} typedef Room;
-
-struct {
-  Room *rooms;
-  gsize len;
-} typedef RoomArray;
-
-static void free_room_array(RoomArray *r) {
-  for (gsize i = 0; i < r->len; i++) {
-    g_free(r->rooms[i].room_id);
-    g_free(r->rooms[i].occupancy);
-  }
-  g_free(r->rooms);
-  g_free(r);
-}
 
 static RoomArray *get_free_rooms(int occupancy) {
   // build query
@@ -55,56 +34,21 @@ static RoomArray *get_free_rooms(int occupancy) {
 
 // state
 
-struct {
+typedef struct {
   GtkWidget *list;
   GtkWidget *frame;
   int occupancy;
-} typedef WidgetState;
-
-static void handle_search(GtkWidget *widget, gpointer state) {
-  WidgetState *s = (WidgetState *)state;
-  RoomArray *rooms = get_free_rooms(s->occupancy);
-  gtk_list_box_remove_all(GTK_LIST_BOX(s->list));
-
-  if (rooms == NULL || rooms->len == 0) {
-    gtk_widget_set_visible(s->frame, false);
-    free_room_array(rooms);
-    return;
-  } else {
-    gtk_widget_set_visible(s->frame, true);
-  }
-
-  for (gsize i = 0; i < rooms->len; i++) {
-    // format strings for labels
-    char *room;
-    char *occupancy;
-    asprintf(&room, "Номер: %s", rooms->rooms[i].room_id);
-    asprintf(&occupancy, "Вместимость: %s", rooms->rooms[i].occupancy);
-
-    GtkWidget *room_l = gtk_label_new(room);
-    g_free(room);
-    gtk_widget_set_margin_start(room_l, 20);
-
-    GtkWidget *occupancy_l = gtk_label_new(occupancy);
-    g_free(occupancy);
-    gtk_widget_set_margin_end(occupancy_l, 20);
-
-    // add item to the list
-    GtkWidget *item = gtk_center_box_new();
-
-    gtk_center_box_set_start_widget(GTK_CENTER_BOX(item), room_l);
-    gtk_center_box_set_end_widget(GTK_CENTER_BOX(item), occupancy_l);
-
-    gtk_widget_set_size_request(item, 500, 50);
-    gtk_widget_set_halign(item, GTK_ALIGN_CENTER);
-    gtk_list_box_append(GTK_LIST_BOX(s->list), item);
-  }
-  free_room_array(rooms);
-}
+} WidgetState;
 
 static void handle_occpancy(GtkWidget *widget, gpointer state) {
   WidgetState *s = (WidgetState *)state;
   s->occupancy = gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(widget));
+}
+
+static void handle_search(GtkWidget *_, gpointer state) {
+  WidgetState *s = (WidgetState *)state;
+  RoomArray *arr = get_free_rooms(s->occupancy);
+  render_rooms_to_list(GTK_LIST_BOX(s->list), GTK_FRAME(s->frame), arr);
 }
 
 static void handle_destroy(GtkWidget *_, gpointer data) { g_free(data); }

@@ -1,19 +1,34 @@
-CC = clang
+CC = gcc
+
+MODE ?= release
 
 CFLAGS = `pkg-config --cflags gtk4` \
 		`pkg-config --libs gtk4` \
 		`pkg-config --libs libpq` \
 		-Wall -Wextra \
+		-Wno-unused-parameter \
 		-lm \
+
+ifeq ($(MODE), release)
+	CFLAGS += -O3
+else
+	CFLAGS += -fsanitize=address \
+						-fsanitize=pointer-compare \
+						-fsanitize=leak \
+						-g -O1 \
+
+endif
 
 SRCS = $(wildcard ./*.c)
 
 OBJS = $(SRCS:.c=.o)
 
+# build
+
 TARGET = hotel2000
 
 run: all
-	./hotel2000
+	./$(TARGET)
 
 all: $(TARGET)
 
@@ -23,11 +38,10 @@ $(TARGET): $(OBJS)
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-debug:
-	$(CC) $(CFLAGS) -g ./*.c -o $(TARGET)
+# analyze
 
 anal: all
-	$(CC) $(CFLAGS) --analyze 
+	$(CC) $(CFLAGS) *.c --analyzer
 
 clean:
 	rm -f $(OBJS) $(TARGET)
