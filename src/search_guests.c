@@ -29,6 +29,7 @@ static void free_person_array(PersonArray *arr) {
     g_free(arr->guests[i].passport);
     g_free(arr->guests[i].phone);
   }
+  g_free(arr->guests);
   g_free(arr);
 }
 
@@ -44,6 +45,12 @@ static PersonArray *find_guests_by_name(const char *name) {
   }
 
   int len = PQntuples(res);
+
+  if (len == 0) {
+    PQclear(res);
+    return NULL;
+  }
+
   PersonArray *arr = g_malloc(sizeof(PersonArray));
   Person *guests = g_malloc(len * sizeof(Person));
 
@@ -70,7 +77,7 @@ static void handle_search(GtkWidget *widget, gpointer data) {
 
   gtk_list_box_remove_all(GTK_LIST_BOX(s->list));
 
-  if (guests == NULL || guests->len == 0) {
+  if (guests == NULL) {
     gtk_widget_set_visible(s->frame, false);
     return;
   } else {

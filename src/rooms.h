@@ -21,8 +21,8 @@ void free_room_array(RoomArray *r);
 
 // UI
 
-void render_rooms_to_list(GtkListBox *list, GtkFrame *frame, RoomArray *rooms);
-
+void render_rooms_to_list(GtkListBox *list, GtkFrame *frame, RoomArray *rooms,
+                          bool remove_children);
 // widgets
 
 GtkWidget *free_rooms_page();

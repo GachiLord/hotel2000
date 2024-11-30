@@ -13,10 +13,12 @@ void free_room_array(RoomArray *r) {
   g_free(r);
 }
 
-void render_rooms_to_list(GtkListBox *list, GtkFrame *frame, RoomArray *rooms) {
-  gtk_list_box_remove_all(GTK_LIST_BOX(list));
+void render_rooms_to_list(GtkListBox *list, GtkFrame *frame, RoomArray *rooms,
+                          bool remove_children) {
+  if (remove_children)
+    gtk_list_box_remove_all(GTK_LIST_BOX(list));
 
-  if (rooms == NULL || rooms->len == 0) {
+  if (rooms == NULL) {
     gtk_widget_set_visible(GTK_WIDGET(frame), false);
     return;
   } else {

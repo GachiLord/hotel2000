@@ -13,19 +13,25 @@ static RoomArray *get_free_rooms(int occupancy) {
   asprintf(&query, "SELECT * from find_free_rooms(%d)", occupancy);
   // excute
   PGresult *res = PQexec(DB_STATE->conn, query);
+  g_free(query);
   // check for error
-  if (PQresultStatus(res) != PGRES_TUPLES_OK) {
+  if (handle_db_error(res, "Не удалось выполнить запрос") != 0) {
     return NULL;
   }
   // create Room structs
   gsize r_len = PQntuples(res);
+
+  if (r_len == 0) {
+    PQclear(res);
+    return NULL;
+  }
+
   Room *rooms = g_malloc(sizeof(Room) * r_len);
   for (gsize i = 0; i < r_len; i++) {
     rooms[i].room_id = g_strdup(PQgetvalue(res, i, 0));
     rooms[i].occupancy = g_strdup(PQgetvalue(res, i, 1));
   }
   PQclear(res);
-  g_free(query);
   // return array of rooms
   RoomArray *arr = g_malloc(sizeof(RoomArray));
   *arr = (RoomArray){rooms, r_len};
@@ -48,7 +54,7 @@ static void handle_occpancy(GtkWidget *widget, gpointer state) {
 static void handle_search(GtkWidget *_, gpointer state) {
   WidgetState *s = (WidgetState *)state;
   RoomArray *arr = get_free_rooms(s->occupancy);
-  render_rooms_to_list(GTK_LIST_BOX(s->list), GTK_FRAME(s->frame), arr);
+  render_rooms_to_list(GTK_LIST_BOX(s->list), GTK_FRAME(s->frame), arr, true);
 }
 
 static void handle_destroy(GtkWidget *_, gpointer data) { g_free(data); }
