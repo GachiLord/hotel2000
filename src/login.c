@@ -2,9 +2,6 @@
 #include "database.h"
 #include <gtk/gtk.h>
 
-extern GtkWindow *APP_OVERLAY;
-extern GtkStack *APP_STACK;
-
 static void login_handler(GtkWidget *widget, gpointer data) {
   if (db_connect() == 0) {
     gtk_stack_set_visible_child_name(APP_STACK, "home");

@@ -1,5 +1,7 @@
 #include "common.h"
 #include "database.h"
+#include "glib-object.h"
+#include "guests.h"
 #include <gtk/gtk.h>
 #include <libpq-fe.h>
 
@@ -11,27 +13,6 @@ typedef struct {
 } WidgetState;
 
 // logic
-
-typedef struct {
-  char *name;
-  char *passport;
-  char *phone;
-} Person;
-
-typedef struct {
-  Person *guests;
-  gsize len;
-} PersonArray;
-
-static void free_person_array(PersonArray *arr) {
-  for (gsize i = 0; i < arr->len; i++) {
-    g_free(arr->guests[i].name);
-    g_free(arr->guests[i].passport);
-    g_free(arr->guests[i].phone);
-  }
-  g_free(arr->guests);
-  g_free(arr);
-}
 
 static PersonArray *find_guests_by_name(const char *name) {
   char *query;
@@ -55,9 +36,9 @@ static PersonArray *find_guests_by_name(const char *name) {
   Person *guests = g_malloc(len * sizeof(Person));
 
   for (int i = 0; i < len; i++) {
-    guests[i] = (Person){g_strdup(PQgetvalue(res, i, 1)),
-                         g_strdup(PQgetvalue(res, i, 2)),
-                         g_strdup(PQgetvalue(res, i, 3))};
+    guests[i] = (Person){
+        g_strdup(PQgetvalue(res, i, 0)), g_strdup(PQgetvalue(res, i, 1)),
+        g_strdup(PQgetvalue(res, i, 2)), g_strdup(PQgetvalue(res, i, 3))};
   }
   PQclear(res);
   *arr = (PersonArray){guests, len};
@@ -107,7 +88,7 @@ static void handle_search(GtkWidget *widget, gpointer data) {
     gtk_widget_set_margin_end(l3, 20);
     gtk_center_box_set_end_widget(GTK_CENTER_BOX(item), l3);
 
-    gtk_widget_set_size_request(item, 600, 50);
+    gtk_widget_set_size_request(item, 800, 50);
     gtk_widget_set_halign(item, GTK_ALIGN_CENTER);
     gtk_list_box_append(GTK_LIST_BOX(s->list), item);
   }
@@ -118,7 +99,7 @@ static void handle_destroy(GtkWidget *_, gpointer data) { g_free(data); }
 
 // UI
 
-GtkWidget *search_guests_page() {
+GtkWidget *search_guests_component(GCallback on_item_click, gpointer data) {
   // main containers
   GtkWidget *box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
   GtkWidget *list = gtk_list_box_new();
@@ -143,6 +124,12 @@ GtkWidget *search_guests_page() {
 
   // handle search
   g_signal_connect(search, "activate", G_CALLBACK(handle_search), state);
+
+  // handle click
+
+  if (on_item_click != NULL) {
+    g_signal_connect(list, "row-activated", on_item_click, data);
+  }
 
   // handle widget destroy
   g_signal_connect(box, "destroy", G_CALLBACK(handle_destroy), state);

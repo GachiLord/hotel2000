@@ -21,9 +21,11 @@ void free_room_array(RoomArray *r);
 
 // UI
 
-void render_rooms_to_list(GtkListBox *list, GtkFrame *frame, RoomArray *rooms,
-                          bool remove_children);
+void render_rooms_to_list(GtkListBox *list, GtkFrame *frame,
+                          const RoomArray *rooms,
+                          bool remove_children_on_update);
 // widgets
 
 GtkWidget *free_rooms_page();
 GtkWidget *read_rooms_page();
+GtkWidget *room_update_component(const char *room_id, const char *occupancy);

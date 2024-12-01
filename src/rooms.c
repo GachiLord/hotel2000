@@ -1,10 +1,14 @@
 #include "rooms.h"
 #include "common.h"
+#include "glib.h"
 #include <gtk/gtk.h>
 #include <libpq-fe.h>
 #include <stdio.h>
 
 void free_room_array(RoomArray *r) {
+  if (r == NULL)
+    return;
+
   for (gsize i = 0; i < r->len; i++) {
     g_free(r->rooms[i].room_id);
     g_free(r->rooms[i].occupancy);
@@ -13,9 +17,10 @@ void free_room_array(RoomArray *r) {
   g_free(r);
 }
 
-void render_rooms_to_list(GtkListBox *list, GtkFrame *frame, RoomArray *rooms,
-                          bool remove_children) {
-  if (remove_children)
+void render_rooms_to_list(GtkListBox *list, GtkFrame *frame,
+                          const RoomArray *rooms,
+                          bool remove_children_on_update) {
+  if (remove_children_on_update)
     gtk_list_box_remove_all(GTK_LIST_BOX(list));
 
   if (rooms == NULL) {
@@ -50,5 +55,4 @@ void render_rooms_to_list(GtkListBox *list, GtkFrame *frame, RoomArray *rooms,
     gtk_widget_set_halign(item, GTK_ALIGN_CENTER);
     gtk_list_box_append(list, item);
   }
-  free_room_array(rooms);
 }

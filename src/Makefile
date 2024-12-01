@@ -44,6 +44,6 @@ anal: all
 	$(CC) $(CFLAGS) *.c --analyzer
 
 clean:
-	rm -f $(OBJS) $(TARGET)
+	rm -f *.o *.out *.plist $(TARGET)
 
 .PHONY: all clean

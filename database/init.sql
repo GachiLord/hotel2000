@@ -267,6 +267,18 @@ BEGIN
     AND rooms.occupancy >= find_free_rooms.occupancy ORDER BY rooms.occupancy ASC LIMIT 10;
 END;$$;
 
+CREATE OR REPLACE FUNCTION read_room_guests (
+  room_id int
+)
+RETURNS SETOF guests
+LANGUAGE PLPGSQL
+AS $$
+BEGIN
+  RETURN QUERY SELECT guests.* FROM guests INNER JOIN rooms_guests 
+    ON rooms_guests.guest_id = guests.guest_id 
+    WHERE rooms_guests.room_id = read_room_guests.room_id;
+END;$$;
+
 CREATE OR REPLACE PROCEDURE check_in_guest (
   guest_id int,
   room_id int

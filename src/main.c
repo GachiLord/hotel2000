@@ -18,7 +18,8 @@ static void activate(GtkApplication *app, gpointer user_data) {
       css_provider, ".toast { background-color: #4B4B4B; color: "
                     "white; opacity: 0.9; padding: 10px;"
                     "border-radius: 10px; margin-bottom: 10px;"
-                    "font-weight: bold; }");
+                    "font-weight: bold; }"
+                    ".header { font-size: 22pt; }");
   gtk_style_context_add_provider_for_display(gdk_display_get_default(),
                                              GTK_STYLE_PROVIDER(css_provider),
                                              GTK_STYLE_PROVIDER_PRIORITY_USER);

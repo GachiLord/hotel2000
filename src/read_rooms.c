@@ -47,9 +47,8 @@ static void handle_load(GtkWidget *widget, gpointer state) {
 
   WidgetState *s = (WidgetState *)state;
   RoomArray *arr = get_rooms_like((s->page));
-  if (arr == NULL)
-    return;
   render_rooms_to_list(GTK_LIST_BOX(s->list), GTK_FRAME(s->frame), arr, false);
+  free_room_array(arr);
   s->page++;
 }
 

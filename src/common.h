@@ -1,9 +1,13 @@
 #include "database.h"
+#include <gtk/gtk.h>
 #include <libpq-fe.h>
 
 // vars
 
 extern DbState *DB_STATE;
+extern GtkWindow *APP_WINDOW;
+extern GtkStack *APP_STACK;
+extern GtkOverlay *APP_OVERLAY;
 
 // ui
 

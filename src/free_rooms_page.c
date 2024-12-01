@@ -43,8 +43,14 @@ static RoomArray *get_free_rooms(int occupancy) {
 typedef struct {
   GtkWidget *list;
   GtkWidget *frame;
+  RoomArray *rooms;
   int occupancy;
 } WidgetState;
+
+static void free_widget_state(WidgetState *s) {
+  free_room_array(s->rooms);
+  g_free(s);
+}
 
 static void handle_occpancy(GtkWidget *widget, gpointer state) {
   WidgetState *s = (WidgetState *)state;
@@ -53,11 +59,29 @@ static void handle_occpancy(GtkWidget *widget, gpointer state) {
 
 static void handle_search(GtkWidget *_, gpointer state) {
   WidgetState *s = (WidgetState *)state;
-  RoomArray *arr = get_free_rooms(s->occupancy);
-  render_rooms_to_list(GTK_LIST_BOX(s->list), GTK_FRAME(s->frame), arr, true);
+  free_room_array(s->rooms);
+  s->rooms = get_free_rooms(s->occupancy);
+  render_rooms_to_list(GTK_LIST_BOX(s->list), GTK_FRAME(s->frame), s->rooms,
+                       true);
 }
 
-static void handle_destroy(GtkWidget *_, gpointer data) { g_free(data); }
+static void handle_item_click(GtkWidget *_, GtkListBoxRow *row,
+                              gpointer state) {
+  // get room_id
+  WidgetState *s = (WidgetState *)state;
+  const char *room_id =
+      s->rooms->rooms[gtk_list_box_row_get_index(row)].room_id;
+  const char *occupancy =
+      s->rooms->rooms[gtk_list_box_row_get_index(row)].occupancy;
+  // invoke room updater component
+  GtkWidget *room_update = room_update_component(room_id, occupancy);
+  gtk_stack_add_child(APP_STACK, room_update);
+  gtk_stack_set_visible_child(APP_STACK, room_update);
+}
+
+static void handle_destroy(GtkWidget *_, gpointer data) {
+  free_widget_state(data);
+}
 
 // ui
 
@@ -74,7 +98,7 @@ GtkWidget *free_rooms_page() {
 
   // state
   WidgetState *state = g_malloc(sizeof(WidgetState));
-  *state = (WidgetState){list, frame, 2};
+  *state = (WidgetState){list, frame, NULL, 2};
 
   // wrapper
   GtkWidget *wrap = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
@@ -98,6 +122,11 @@ GtkWidget *free_rooms_page() {
   g_signal_connect(button, "clicked", G_CALLBACK(handle_search), state);
   gtk_box_prepend(GTK_BOX(wrap), button);
 
+  // handle item click
+
+  g_signal_connect(list, "row-activated", G_CALLBACK(handle_item_click), state);
+
+  // handle destroy
   g_signal_connect(box, "destroy", G_CALLBACK(handle_destroy), state);
 
   return box;
