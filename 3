@@ -1,5 +1,4 @@
 #include "common.h"
-#include "glib.h"
 #include "guests.h"
 #include <gtk/gtk.h>
 #include <libpq-fe.h>
@@ -8,8 +7,6 @@
 
 typedef struct {
   GtkWidget *component;
-  GtkWidget *list;
-  GtkWidget *frame;
   PersonArray *arr;
   char *room_id;
 } WidgetState;
@@ -20,11 +17,7 @@ static void free_widget_state(WidgetState *s) {
   g_free(s);
 }
 
-static WidgetState *state;
-
 // logic
-
-// fetch current guests
 
 static PersonArray *list_room_guests(const char *room_id) {
   char *query;
@@ -58,56 +51,17 @@ static PersonArray *list_room_guests(const char *room_id) {
   return arr;
 }
 
-// manipulate current users
-
-static void handle_guest_click(GtkListBox *_, GtkListBoxRow *row,
-                               gpointer state) {
+static void handle_item_click(GtkListBox *_, GtkListBoxRow *row,
+                              gpointer state) {
   WidgetState *s = (WidgetState *)state;
   const char *guest_id = s->arr->guests[gtk_list_box_row_get_index(row)].id;
   g_print("%s", guest_id);
 }
 
-// adding new users
-static void handle_new_guest_choose(GtkListBox *_, GtkListBoxRow *row,
-                                    PersonArray **arr) {
-  const Person *p = &(*arr)->guests[gtk_list_box_row_get_index(row)];
-  // check if guest is present in the array
-  for (gsize i = 0; state->arr != NULL && i < state->arr->len; i++) {
-    if (g_strcmp0(state->arr->guests[i].id, p->id) == 0) {
-      show_toast("Гость уже добавлен в номер");
-      return;
-    }
-  }
-  // make deep copy of the person and save it on the heap
-  Person *pc = g_malloc(sizeof(Person));
-  *pc = (Person){g_strdup(p->id), g_strdup(p->name), g_strdup(p->phone),
-                 g_strdup(p->passport)};
-  // add to array
-  if (state->arr == NULL) {
-    // init array if necessary
-    state->arr = g_malloc(sizeof(PersonArray));
-    *state->arr = (PersonArray){pc, 1};
-  } else {
-    // or push to existing one
-    push_person_array(state->arr, pc);
-    g_free(pc);
-  }
-  // render
-  render_guests_to_list(GTK_LIST_BOX(state->list), GTK_FRAME(state->frame),
-                        state->arr, true);
-  show_toast("Гость добавлен в номер");
-}
-
-static void handle_add_user(GtkWidget *_, gpointer data) {
-  GtkWidget *search_guests =
-      search_guests_component(handle_new_guest_choose, true);
-  add_widget_to_main_stack(search_guests, NULL);
-}
-
-// handle widget's disposal
 static void handle_close(GtkWidget *_, gpointer state) {
   WidgetState *s = (WidgetState *)state;
-  remove_widget_from_main_stack(s->component);
+  gtk_stack_set_visible_child_name(APP_STACK, "home");
+  gtk_stack_remove(APP_STACK, s->component);
 }
 
 static void handle_destroy(GtkWidget *_, gpointer data) {
@@ -123,7 +77,8 @@ GtkWidget *room_update_component(const char *room_id, const char *occupancy) {
   // state
   PersonArray *current_guests = list_room_guests(room_id);
 
-  state = g_malloc(sizeof(WidgetState));
+  WidgetState *state = g_malloc(sizeof(WidgetState));
+  *state = (WidgetState){box, current_guests, g_strdup(room_id)};
 
   // close button
 
@@ -153,16 +108,6 @@ GtkWidget *room_update_component(const char *room_id, const char *occupancy) {
   gtk_list_box_set_selection_mode(GTK_LIST_BOX(list), GTK_SELECTION_NONE);
   gtk_box_append(GTK_BOX(box), frame);
 
-  // init state
-
-  *state = (WidgetState){box, list, frame, current_guests, g_strdup(room_id)};
-
-  // render current guests
-
-  // render
-  render_guests_to_list(GTK_LIST_BOX(list), GTK_FRAME(frame), current_guests,
-                        true);
-
   // add button
 
   GtkWidget *button = gtk_button_new_with_label("Добавить гостя");
@@ -171,10 +116,7 @@ GtkWidget *room_update_component(const char *room_id, const char *occupancy) {
 
   // handle signals
 
-  g_signal_connect(button, "clicked", G_CALLBACK(handle_add_user), state);
-
-  g_signal_connect(list, "row-activated", G_CALLBACK(handle_guest_click),
-                   state);
+  g_signal_connect(list, "row-activated", G_CALLBACK(handle_item_click), state);
 
   g_signal_connect(box, "destroy", G_CALLBACK(handle_destroy), state);
 

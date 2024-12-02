@@ -80,8 +80,7 @@ static void handle_item_click(GtkWidget *_, GtkListBoxRow *row,
       s->rooms->rooms[gtk_list_box_row_get_index(row)].occupancy;
   // invoke room updater component
   GtkWidget *room_update = room_update_component(room_id, occupancy);
-  gtk_stack_add_child(APP_STACK, room_update);
-  gtk_stack_set_visible_child(APP_STACK, room_update);
+  add_widget_to_main_stack(room_update, "temp_parent");
 }
 
 static void handle_destroy(GtkWidget *_, gpointer state) {

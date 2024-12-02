@@ -6,12 +6,14 @@
 DbState *DB_STATE;
 
 void free_db_state() {
+  if (DB_STATE->conn != NULL)
+    PQfinish(DB_STATE->conn);
+
   g_free(DB_STATE->user);
   g_free(DB_STATE->password);
   g_free(DB_STATE->port);
   g_free(DB_STATE->host);
   g_free(DB_STATE->database);
-  PQfinish(DB_STATE->conn);
   g_free(DB_STATE);
 }
 
@@ -23,6 +25,7 @@ static void exit_nicely() {
 void init_db_state() {
   // pass initial values TODO: use persisted values
   DB_STATE = g_malloc(sizeof(DbState));
+  DB_STATE->conn = NULL;
   DB_STATE->user = g_strdup("postgres");
   DB_STATE->password = g_strdup("root");
   DB_STATE->port = g_strdup("5432");

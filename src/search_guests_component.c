@@ -10,7 +10,14 @@
 typedef struct {
   GtkWidget *list;
   GtkWidget *frame;
+  GtkWidget *component;
+  PersonArray *arr;
 } WidgetState;
+
+static void free_widget_state(WidgetState *s) {
+  free_person_array(s->arr);
+  g_free(s);
+}
 
 // logic
 
@@ -54,57 +61,32 @@ static void handle_search(GtkWidget *widget, gpointer data) {
   }
 
   WidgetState *s = (WidgetState *)data;
-  PersonArray *guests = find_guests_by_name(q);
+  free_person_array(s->arr);
+  s->arr = find_guests_by_name(q);
 
-  gtk_list_box_remove_all(GTK_LIST_BOX(s->list));
-
-  if (guests == NULL) {
-    gtk_widget_set_visible(s->frame, false);
-    return;
-  } else {
-    gtk_widget_set_visible(s->frame, true);
-  }
-
-  for (gsize i = 0; i < guests->len; i++) {
-    GtkWidget *item = gtk_center_box_new();
-
-    char *t1;
-    asprintf(&t1, "ФИО: %s", guests->guests[i].name);
-    GtkWidget *l1 = gtk_label_new(t1);
-    g_free(t1);
-    gtk_widget_set_margin_start(l1, 20);
-    gtk_center_box_set_start_widget(GTK_CENTER_BOX(item), l1);
-
-    char *t2;
-    asprintf(&t2, "Паспорт: %s", guests->guests[i].passport);
-    GtkWidget *l2 = gtk_label_new(t2);
-    g_free(t2);
-    gtk_center_box_set_center_widget(GTK_CENTER_BOX(item), l2);
-
-    char *t3;
-    asprintf(&t3, "Телефон: %s", guests->guests[i].phone);
-    GtkWidget *l3 = gtk_label_new(t3);
-    g_free(t3);
-    gtk_widget_set_margin_end(l3, 20);
-    gtk_center_box_set_end_widget(GTK_CENTER_BOX(item), l3);
-
-    gtk_widget_set_size_request(item, 800, 50);
-    gtk_widget_set_halign(item, GTK_ALIGN_CENTER);
-    gtk_list_box_append(GTK_LIST_BOX(s->list), item);
-  }
-  free_person_array(guests);
+  render_guests_to_list(GTK_LIST_BOX(s->list), GTK_FRAME(s->frame), s->arr,
+                        true);
 }
 
-static void handle_destroy(GtkWidget *_, gpointer data) { g_free(data); }
+static void handle_close(GtkWidget *_, gpointer state) {
+  WidgetState *s = (WidgetState *)state;
+  gtk_stack_set_visible_child_name(APP_STACK, "temp_parent");
+  gtk_stack_remove(APP_STACK, s->component);
+}
+
+static void handle_destroy(GtkWidget *_, gpointer data) {
+  free_widget_state(data);
+}
 
 // UI
 
-GtkWidget *search_guests_component(GCallback on_item_click, gpointer data) {
+GtkWidget *search_guests_component(GuestClickHandler on_item_click,
+                                   bool handle_cancel) {
   // main containers
   GtkWidget *box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
   GtkWidget *list = gtk_list_box_new();
   GtkWidget *frame = gtk_frame_new(NULL);
-  gtk_widget_set_margin_top(box, 50);
+  gtk_widget_set_margin_top(box, 10);
   gtk_widget_set_visible(frame, false);
   gtk_frame_set_child(GTK_FRAME(frame), list);
   gtk_widget_set_halign(frame, GTK_ALIGN_CENTER);
@@ -113,7 +95,7 @@ GtkWidget *search_guests_component(GCallback on_item_click, gpointer data) {
 
   // state
   WidgetState *state = g_malloc(sizeof(WidgetState));
-  *state = (WidgetState){list, frame};
+  *state = (WidgetState){list, frame, box, NULL};
 
   // controls
 
@@ -128,7 +110,16 @@ GtkWidget *search_guests_component(GCallback on_item_click, gpointer data) {
   // handle click
 
   if (on_item_click != NULL) {
-    g_signal_connect(list, "row-activated", on_item_click, data);
+    g_signal_connect(list, "row-activated", G_CALLBACK(on_item_click),
+                     &state->arr);
+  }
+
+  if (handle_cancel) {
+    GtkWidget *cancel_button = gtk_button_new_with_label("Отмена");
+    gtk_widget_set_halign(cancel_button, GTK_ALIGN_START);
+    gtk_widget_set_margin_start(cancel_button, 10);
+    g_signal_connect(cancel_button, "clicked", G_CALLBACK(handle_close), state);
+    gtk_box_prepend(GTK_BOX(box), cancel_button);
   }
 
   // handle widget destroy

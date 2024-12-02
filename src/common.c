@@ -1,13 +1,12 @@
+#include "common.h"
 #include "database.h"
 #include "glib.h"
 #include <gtk/gtk.h>
 #include <libpq-fe.h>
 
-extern GtkWidget *APP_OVERLAY;
-extern DbState *DB_STATE;
-static GtkWidget *TOAST;
+// static
 
-// Structs
+static GtkWidget *TOAST;
 
 // UI
 
@@ -15,6 +14,16 @@ static gboolean remove_overlay() {
   gtk_overlay_remove_overlay(GTK_OVERLAY(APP_OVERLAY), TOAST);
   TOAST = NULL;
   return false;
+}
+
+void add_widget_to_main_stack(GtkWidget *widget, const char *name) {
+  gtk_stack_add_named(APP_STACK, widget, name);
+  gtk_stack_set_visible_child(APP_STACK, widget);
+}
+
+void remove_widget_from_main_stack(GtkWidget *widget) {
+  gtk_stack_set_visible_child_name(APP_STACK, "home");
+  gtk_stack_remove(APP_STACK, widget);
 }
 
 void show_toast(const char *text) {

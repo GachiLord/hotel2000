@@ -1,3 +1,4 @@
+#include "common.h"
 #include "guests.h"
 #include "login.h"
 #include "rooms.h"

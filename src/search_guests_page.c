@@ -13,8 +13,8 @@ typedef struct {
 
 // logic
 
-static void handle_item_click(GtkWidget *self, GtkListBoxRow *row,
-                              gpointer data) {
+static void handle_item_click(GtkListBox *self, GtkListBoxRow *row,
+                              PersonArray **arr) {
   // TODO: implement user editor
   g_print("smth\n");
 }
@@ -22,5 +22,5 @@ static void handle_item_click(GtkWidget *self, GtkListBoxRow *row,
 // UI
 
 GtkWidget *search_guests_page() {
-  return search_guests_component(G_CALLBACK(handle_item_click), NULL);
+  return search_guests_component(handle_item_click, false);
 }
