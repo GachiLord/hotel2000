@@ -1,5 +1,6 @@
 #include "guests.h"
 #include "glib.h"
+#include "glibconfig.h"
 
 // logic
 
@@ -8,19 +9,37 @@ void free_person_array(PersonArray *arr) {
     return;
 
   for (gsize i = 0; i < arr->len; i++) {
-    g_free(arr->guests[i].id);
-    g_free(arr->guests[i].name);
-    g_free(arr->guests[i].passport);
-    g_free(arr->guests[i].phone);
+    free_person(&arr->guests[i]);
   }
   g_free(arr->guests);
   g_free(arr);
+}
+
+void free_person(Person *p) {
+  g_free(p->id);
+  g_free(p->name);
+  g_free(p->passport);
+  g_free(p->phone);
 }
 
 PersonArray *push_person_array(PersonArray *self, const Person *item) {
   self->guests = g_realloc(self->guests, (self->len + 1) * sizeof(Person));
   self->guests[self->len] = *item;
   self->len++;
+  return self;
+}
+
+PersonArray *remove_person_array(PersonArray *self, gsize index) {
+  free_person(&self->guests[index]);
+
+  if (index != self->len - 1) {
+    memmove(self->guests + index, self->guests + index + 1,
+            (self->len - 1 - index) * sizeof(Person));
+  }
+
+  self->len--;
+  self->guests = g_realloc(self->guests, self->len * sizeof(Person));
+
   return self;
 }
 
@@ -46,7 +65,7 @@ void render_guests_to_list(GtkListBox *list, GtkFrame *frame,
   if (remove_children_on_update)
     gtk_list_box_remove_all(GTK_LIST_BOX(list));
 
-  if (guests == NULL) {
+  if (guests == NULL || guests->len == 0) {
     gtk_widget_set_visible(GTK_WIDGET(frame), false);
     return;
   } else {

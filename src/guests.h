@@ -15,9 +15,11 @@ typedef struct {
   gsize len;
 } PersonArray;
 
+void free_person(Person *p);
 void free_person_array(PersonArray *arr);
 PersonArray *extend_person_array(PersonArray *self, PersonArray *child);
 PersonArray *push_person_array(PersonArray *self, const Person *item);
+PersonArray *remove_person_array(PersonArray *self, gsize index);
 
 // UI
 

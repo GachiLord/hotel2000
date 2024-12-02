@@ -12,6 +12,7 @@ typedef struct {
   GtkWidget *frame;
   PersonArray *arr;
   char *room_id;
+  bool is_delete_mode;
 } WidgetState;
 
 static void free_widget_state(WidgetState *s) {
@@ -60,11 +61,51 @@ static PersonArray *list_room_guests(const char *room_id) {
 
 // manipulate current users
 
+static int add_guest_to_room(const char *room_id, const char *guest_id) {
+  char *query;
+  asprintf(&query, "call check_in_guest(%s, %s)", guest_id, room_id);
+
+  PGresult *res = PQexec(DB_STATE->conn, query);
+  g_free(query);
+
+  if (handle_db_error(res, "Не удалось добавить гостя") != 0) {
+    return -1;
+  }
+
+  PQclear(res);
+  return 0;
+}
+
+static int remove_guest_from_room(const char *room_id, const char *guest_id) {
+  char *query;
+  asprintf(&query, "call check_out_guest(%s, %s)", guest_id, room_id);
+
+  PGresult *res = PQexec(DB_STATE->conn, query);
+  g_free(query);
+
+  if (handle_db_error(res, "Не удалось удалить гостя") != 0) {
+    return -1;
+  }
+
+  PQclear(res);
+  return 0;
+}
+
 static void handle_guest_click(GtkListBox *_, GtkListBoxRow *row,
                                gpointer state) {
   WidgetState *s = (WidgetState *)state;
-  const char *guest_id = s->arr->guests[gtk_list_box_row_get_index(row)].id;
-  g_print("%s", guest_id);
+  int index = gtk_list_box_row_get_index(row);
+  const char *guest_id = s->arr->guests[index].id;
+  if (s->is_delete_mode) {
+    if (remove_guest_from_room(s->room_id, guest_id) == 0) {
+      remove_person_array(s->arr, index);
+      render_guests_to_list(GTK_LIST_BOX(s->list), GTK_FRAME(s->frame), s->arr,
+                            true);
+      show_toast("Гость удален");
+    }
+  } else {
+    // TODO: implement
+  }
 }
 
 // adding new users
@@ -82,6 +123,9 @@ static void handle_new_guest_choose(GtkListBox *_, GtkListBoxRow *row,
   Person *pc = g_malloc(sizeof(Person));
   *pc = (Person){g_strdup(p->id), g_strdup(p->name), g_strdup(p->phone),
                  g_strdup(p->passport)};
+  if (add_guest_to_room(state->room_id, pc->id) != 0) {
+    return;
+  }
   // add to array
   if (state->arr == NULL) {
     // init array if necessary
@@ -102,6 +146,18 @@ static void handle_add_user(GtkWidget *_, gpointer data) {
   GtkWidget *search_guests =
       search_guests_component(handle_new_guest_choose, true);
   add_widget_to_main_stack(search_guests, NULL);
+}
+
+static void handle_remove_user_mode(GtkWidget *widget, gpointer state) {
+  WidgetState *s = (WidgetState *)state;
+  s->is_delete_mode = !s->is_delete_mode;
+  if (s->is_delete_mode) {
+    gtk_button_set_label(GTK_BUTTON(widget), "Отмена");
+    show_toast("Переход в режим удаления");
+  } else {
+    gtk_button_set_label(GTK_BUTTON(widget), "Убрать гостя");
+    show_toast("Переход в обычный режим");
+  }
 }
 
 // handle widget's disposal
@@ -155,23 +211,33 @@ GtkWidget *room_update_component(const char *room_id, const char *occupancy) {
 
   // init state
 
-  *state = (WidgetState){box, list, frame, current_guests, g_strdup(room_id)};
-
-  // render current guests
+  *state =
+      (WidgetState){box, list, frame, current_guests, g_strdup(room_id), false};
 
   // render
   render_guests_to_list(GTK_LIST_BOX(list), GTK_FRAME(frame), current_guests,
                         true);
 
-  // add button
+  // add buttons
 
-  GtkWidget *button = gtk_button_new_with_label("Добавить гостя");
-  gtk_widget_set_halign(button, GTK_ALIGN_CENTER);
-  gtk_box_append(GTK_BOX(box), button);
+  GtkWidget *buttons_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
+  GtkWidget *button_add = gtk_button_new_with_label("Добавить гостя");
+  gtk_widget_set_halign(button_add, GTK_ALIGN_CENTER);
+  gtk_box_append(GTK_BOX(buttons_box), button_add);
+
+  GtkWidget *button_remove = gtk_button_new_with_label("Убрать гостя");
+  gtk_widget_set_halign(button_remove, GTK_ALIGN_CENTER);
+  gtk_box_append(GTK_BOX(buttons_box), button_remove);
+  gtk_widget_set_halign(buttons_box, GTK_ALIGN_CENTER);
+
+  gtk_box_append(GTK_BOX(box), buttons_box);
 
   // handle signals
 
-  g_signal_connect(button, "clicked", G_CALLBACK(handle_add_user), state);
+  g_signal_connect(button_add, "clicked", G_CALLBACK(handle_add_user), state);
+
+  g_signal_connect(button_remove, "clicked",
+                   G_CALLBACK(handle_remove_user_mode), state);
 
   g_signal_connect(list, "row-activated", G_CALLBACK(handle_guest_click),
                    state);

@@ -289,13 +289,14 @@ BEGIN
   INSERT INTO rooms_guests(guest_id, room_id) VALUES(guest_id, room_id);
 END;$$;
 
-CREATE OR REPLACE PROCEDURE check_out_guests(
+CREATE OR REPLACE PROCEDURE check_out_guest (
+  guest_id int,
   room_id int
 )
 LANGUAGE PLPGSQL
 AS $$
 BEGIN
-  DELETE FROM rooms_guests WHERE room_id = room_id;
+  DELETE FROM rooms_guests WHERE rooms_guests.guest_id = check_out_guest.guest_id AND rooms_guests.room_id = check_out_guest.room_id;
 END;$$;
 
 -- pricing
