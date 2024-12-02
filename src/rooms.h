@@ -18,6 +18,7 @@ typedef struct {
 // logic
 
 void free_room_array(RoomArray *r);
+RoomArray *extend_room_array(RoomArray *self, RoomArray *child);
 
 // UI
 

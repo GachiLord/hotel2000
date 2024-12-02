@@ -5,6 +5,8 @@
 #include <libpq-fe.h>
 #include <stdio.h>
 
+// logic
+
 void free_room_array(RoomArray *r) {
   if (r == NULL)
     return;
@@ -16,6 +18,21 @@ void free_room_array(RoomArray *r) {
   g_free(r->rooms);
   g_free(r);
 }
+
+RoomArray *extend_room_array(RoomArray *self, RoomArray *child) {
+  // copy child elements to self
+  self->rooms = g_realloc(self->rooms, (self->len + child->len) * sizeof(Room));
+  memcpy(self->rooms + self->len, child->rooms, child->len * sizeof(Room));
+  self->len += child->len;
+  // free child struct but not its elements, because they are going to be used
+  // by self struct
+  g_free(child->rooms);
+  g_free(child);
+  // return new-ish struct
+  return self;
+}
+
+// UI
 
 void render_rooms_to_list(GtkListBox *list, GtkFrame *frame,
                           const RoomArray *rooms,

@@ -5,7 +5,7 @@
 
 // logic
 
-static RoomArray *get_rooms_like(int page) {
+static RoomArray *get_rooms_by_page(int page) {
   char *query;
   asprintf(&query, "SELECT * FROM read_rooms_by_page(%d)", page);
   // excute
@@ -40,19 +40,54 @@ static RoomArray *get_rooms_like(int page) {
 typedef struct {
   GtkWidget *list;
   GtkWidget *frame;
+  RoomArray *rooms;
   int page;
 } WidgetState;
+
+static void free_widget_state(WidgetState *s) {
+  free_room_array(s->rooms);
+  g_free(s);
+}
 
 static void handle_load(GtkWidget *widget, gpointer state) {
 
   WidgetState *s = (WidgetState *)state;
-  RoomArray *arr = get_rooms_like((s->page));
+  // fetch rooms
+  RoomArray *arr = get_rooms_by_page(s->page);
+
+  if (arr == NULL)
+    return;
+
+  // render
   render_rooms_to_list(GTK_LIST_BOX(s->list), GTK_FRAME(s->frame), arr, false);
-  free_room_array(arr);
+
+  // update state
+  if (s->rooms == NULL)
+    s->rooms = arr;
+  else
+    extend_room_array(s->rooms, arr);
+
   s->page++;
 }
 
-static void handle_destroy(GtkWidget *_, gpointer data) { g_free(data); }
+static void handle_item_click(GtkWidget *_, GtkListBoxRow *row,
+                              gpointer state) {
+  // get room_id
+  WidgetState *s = (WidgetState *)state;
+  const char *room_id =
+      s->rooms->rooms[gtk_list_box_row_get_index(row)].room_id;
+  const char *occupancy =
+      s->rooms->rooms[gtk_list_box_row_get_index(row)].occupancy;
+  // invoke room updater component
+  GtkWidget *room_update = room_update_component(room_id, occupancy);
+  gtk_stack_add_child(APP_STACK, room_update);
+  gtk_stack_set_visible_child(APP_STACK, room_update);
+}
+
+static void handle_destroy(GtkWidget *_, gpointer state) {
+  WidgetState *s = (WidgetState *)state;
+  free_widget_state(s);
+}
 
 // UI
 
@@ -73,7 +108,7 @@ GtkWidget *read_rooms_page() {
 
   // state
   WidgetState *state = g_malloc(sizeof(WidgetState));
-  *state = (WidgetState){list, frame, 1};
+  *state = (WidgetState){list, frame, NULL, 1};
 
   // controls
 
@@ -83,7 +118,12 @@ GtkWidget *read_rooms_page() {
   // gtk_widget_set_size_request(button, 300, 40);
 
   // handle search
+
   g_signal_connect(button, "clicked", G_CALLBACK(handle_load), state);
+
+  // handle item click
+
+  g_signal_connect(list, "row-activated", G_CALLBACK(handle_item_click), state);
 
   // handle widget destroy
   g_signal_connect(box, "destroy", G_CALLBACK(handle_destroy), state);
