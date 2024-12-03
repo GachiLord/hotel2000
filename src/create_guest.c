@@ -10,8 +10,8 @@ extern DbState *DB_STATE;
 static int create_guest(const char *name, const char *phone,
                         const char *passport) {
   char *query;
-  asprintf(&query, "call create_guest ('%s', '%s', '%s')", name, phone,
-           passport);
+  asprintf(&query, "call create_guest ('%s', '%s', '%s')", name, passport,
+           phone);
 
   PGresult *res = PQexec(DB_STATE->conn, query);
   g_free(query);

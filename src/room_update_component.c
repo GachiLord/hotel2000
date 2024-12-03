@@ -104,7 +104,8 @@ static void handle_guest_click(GtkListBox *_, GtkListBoxRow *row,
       show_toast("Гость удален");
     }
   } else {
-    // TODO: implement
+    add_widget_to_main_stack(guest_update_component(guest_id, "temp_parent"),
+                             NULL);
   }
 }
 

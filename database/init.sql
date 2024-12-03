@@ -36,7 +36,7 @@ RETURNS SETOF guests
 LANGUAGE PLPGSQL
 AS $$
 BEGIN
-  RETURN QUERY SELECT * FROM guests WHERE guest_id = guest_id;
+  RETURN QUERY SELECT * FROM guests WHERE guests.guest_id = read_guest.guest_id;
 END;$$;
 
 CREATE OR REPLACE PROCEDURE update_guest (
@@ -48,7 +48,7 @@ CREATE OR REPLACE PROCEDURE update_guest (
 LANGUAGE PLPGSQL
 AS $$
 BEGIN
-  UPDATE guests SET name = name, passport = passport, phone = phone WHERE guest_id = guest_id;
+  UPDATE guests SET name = update_guest.name, passport = update_guest.passport, phone = update_guest.phone WHERE guests.guest_id = update_guest.guest_id;
 END;$$;
 
 CREATE OR REPLACE PROCEDURE delete_guest (

@@ -16,6 +16,7 @@ typedef struct {
 } PersonArray;
 
 void free_person(Person *p);
+void free_person_fields(Person *p);
 void free_person_array(PersonArray *arr);
 PersonArray *extend_person_array(PersonArray *self, PersonArray *child);
 PersonArray *push_person_array(PersonArray *self, const Person *item);
@@ -29,6 +30,8 @@ typedef void (*GuestClickHandler)(GtkListBox *_, GtkListBoxRow *row,
 GtkWidget *create_guests_page();
 GtkWidget *search_guests_page();
 GtkWidget *search_guests_component(GuestClickHandler, bool handle_cancel);
+GtkWidget *guest_update_component(const char *guest_id,
+                                  const char *parent_name);
 
 void render_guests_to_list(GtkListBox *list, GtkFrame *frame,
                            const PersonArray *guests,

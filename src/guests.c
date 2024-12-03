@@ -9,17 +9,22 @@ void free_person_array(PersonArray *arr) {
     return;
 
   for (gsize i = 0; i < arr->len; i++) {
-    free_person(&arr->guests[i]);
+    free_person_fields(&arr->guests[i]);
   }
   g_free(arr->guests);
   g_free(arr);
 }
 
-void free_person(Person *p) {
+void free_person_fields(Person *p) {
   g_free(p->id);
   g_free(p->name);
   g_free(p->passport);
   g_free(p->phone);
+}
+
+void free_person(Person *p) {
+  free_person_fields(p);
+  g_free(p);
 }
 
 PersonArray *push_person_array(PersonArray *self, const Person *item) {
@@ -30,7 +35,7 @@ PersonArray *push_person_array(PersonArray *self, const Person *item) {
 }
 
 PersonArray *remove_person_array(PersonArray *self, gsize index) {
-  free_person(&self->guests[index]);
+  free_person_fields(&self->guests[index]);
 
   if (index != self->len - 1) {
     memmove(self->guests + index, self->guests + index + 1,
