@@ -1,4 +1,5 @@
 #include "common.h"
+#include "goods.h"
 #include "guests.h"
 #include "login.h"
 #include "rooms.h"
@@ -21,6 +22,8 @@ GtkWidget *init_home_page() {
   GtkWidget *read_rooms = read_rooms_page();
   GtkWidget *guest_create = create_guests_page();
   GtkWidget *guest_search = search_guests_page();
+  GtkWidget *goods_create = create_goods_page();
+  GtkWidget *goods_search = search_goods_page();
   gtk_stack_add_titled(GTK_STACK(main_stack), free_rooms, "free_rooms",
                        "Поиск номеров");
   gtk_stack_add_titled(GTK_STACK(main_stack), read_rooms, "read_rooms",
@@ -29,6 +32,10 @@ GtkWidget *init_home_page() {
                        "Регистрация гостей");
   gtk_stack_add_titled(GTK_STACK(main_stack), guest_search, "search_guests",
                        "Поиск гостей");
+  gtk_stack_add_titled(GTK_STACK(main_stack), goods_create, "create_goods",
+                       "Создание товаров");
+  gtk_stack_add_titled(GTK_STACK(main_stack), goods_search, "search_goods",
+                       "Поиск товаров");
   // bind switcher to main_stack and change the animation
   gtk_stack_switcher_set_stack(GTK_STACK_SWITCHER(switcher),
                                GTK_STACK(main_stack));

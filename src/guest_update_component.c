@@ -72,6 +72,8 @@ static void handle_save(GtkWidget *_, gpointer __) {
 
 // manage orders
 
+static void handle_add_order(GtkWidget *_, gpointer __) { g_print("stub\n"); }
+
 // handle destroy
 
 static void handle_close(GtkWidget *_, gpointer __) {
@@ -150,6 +152,12 @@ GtkWidget *guest_update_component(const char *guest_id,
   gtk_widget_set_halign(order_label, GTK_ALIGN_CENTER);
   gtk_box_append(GTK_BOX(order_box), order_label);
 
+  GtkWidget *add_order_button = gtk_button_new_with_label("Добавить");
+  gtk_widget_set_size_request(add_order_button, -1, 40);
+  gtk_widget_set_halign(add_order_button, GTK_ALIGN_CENTER);
+  gtk_widget_set_valign(add_order_button, GTK_ALIGN_START);
+  gtk_box_append(GTK_BOX(order_box), add_order_button);
+
   // close button
 
   GtkWidget *close_button = gtk_button_new_with_label("Назад");
@@ -167,6 +175,9 @@ GtkWidget *guest_update_component(const char *guest_id,
   g_signal_connect(save_button, "clicked", G_CALLBACK(handle_save), NULL);
 
   g_signal_connect(close_button, "clicked", G_CALLBACK(handle_close), NULL);
+
+  g_signal_connect(add_order_button, "clicked", G_CALLBACK(handle_add_order),
+                   NULL);
 
   g_signal_connect(main_box_wrapper, "destroy", G_CALLBACK(handle_destroy),
                    NULL);

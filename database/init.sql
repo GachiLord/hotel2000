@@ -301,9 +301,10 @@ END;$$;
 
 -- pricing
 
-CREATE TABLE IF NOT EXISTS pricing (
+CREATE TABLE IF NOT EXISTS goods (
   item_id SERIAL PRIMARY KEY,
-  title varchar(200) NOT NULL
+  title varchar(200) NOT NULL,
+  price money NOT NULL
 );
 
 
@@ -314,7 +315,7 @@ CREATE OR REPLACE PROCEDURE create_item (
 LANGUAGE PLPGSQL
 AS $$
 BEGIN
-  INSERT INTO pricing(title, price) VALUES (title, price);
+  INSERT INTO goods(title, price) VALUES (title, price);
 END;$$;
 
 CREATE OR REPLACE FUNCTION read_items_by_page (
@@ -324,7 +325,17 @@ RETURNS SETOF pricing
 LANGUAGE PLPGSQL
 AS $$
 BEGIN
-  RETURN QUERY SELECT * FROM pricing OFFSET (max(0, page - 1) * 20) LIMIT 20;
+  RETURN QUERY SELECT * FROM goods OFFSET (max(0, page - 1) * 20) LIMIT 20;
+END;$$;
+
+CREATE OR REPLACE FUNCTION find_goods (
+  title varchar(50)
+)
+RETURNS SETOF goods
+LANGUAGE PLPGSQL
+AS $$
+BEGIN
+  RETURN QUERY SELECT * FROM goods WHERE goods.title ILIKE '%' || find_goods.title || '%' LIMIT 20;
 END;$$;
 
 CREATE OR REPLACE PROCEDURE update_item (
@@ -335,7 +346,7 @@ CREATE OR REPLACE PROCEDURE update_item (
 LANGUAGE PLPGSQL
 AS $$
 BEGIN
-  UPDATE pricing SET title = title, price = price WHERE item_id = item_id;
+  UPDATE goods SET title = title, price = price WHERE item_id = item_id;
 END;$$;
 
 CREATE OR REPLACE PROCEDURE delete_item (
@@ -344,7 +355,7 @@ CREATE OR REPLACE PROCEDURE delete_item (
 LANGUAGE PLPGSQL
 AS $$
 BEGIN
-  DELETE FROM pricing WHERE item_id = item_id;
+  DELETE FROM goods WHERE item_id = item_id;
 END;$$;
 
 
@@ -354,10 +365,10 @@ CREATE TABLE IF NOT EXISTS orders (
   has_paid Boolean NOT NULL DEFAULT false,
   guest_id int NOT NULL,
   item_id int NOT NULL,
-  price money NOT NULL,
+  sold_for money NOT NULL,
   created_at timestamp,
   FOREIGN KEY(guest_id) REFERENCES guests(guest_id) ON DELETE SET NULL,
-  FOREIGN KEY(item_id) REFERENCES pricing(item_id) ON DELETE SET NULL
+  FOREIGN KEY(item_id) REFERENCES goods(item_id) ON DELETE SET NULL
 );
 
 

@@ -3,8 +3,6 @@
 #include <gtk/gtk.h>
 #include <libpq-fe.h>
 
-extern DbState *DB_STATE;
-
 // logic
 
 static int create_guest(const char *name, const char *phone,
