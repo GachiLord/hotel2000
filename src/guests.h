@@ -18,20 +18,21 @@ typedef struct {
 void free_person(Person *p);
 void free_person_fields(Person *p);
 void free_person_array(PersonArray *arr);
+Person person_copy(Person p);
+PersonArray *new_person_array(gsize len);
 PersonArray *extend_person_array(PersonArray *self, PersonArray *child);
-PersonArray *push_person_array(PersonArray *self, const Person *item);
+PersonArray *push_person_array(PersonArray *self, Person item);
 PersonArray *remove_person_array(PersonArray *self, gsize index);
 
 // UI
 
-typedef void (*GuestClickHandler)(GtkListBox *_, GtkListBoxRow *row,
-                                  PersonArray **arr);
+typedef void (*GuestClickHandler)(const Person guest, gpointer data);
 
 GtkWidget *create_guests_page();
 GtkWidget *search_guests_page();
-GtkWidget *search_guests_component(GuestClickHandler, bool handle_cancel);
-GtkWidget *guest_update_component(const char *guest_id,
-                                  const char *parent_name);
+GtkWidget *search_guests_component(GuestClickHandler, gpointer data,
+                                   bool handle_cancel, GtkWidget *parent);
+GtkWidget *guest_update_component(const char *guest_id, GtkWidget *parent);
 
 void render_guests_to_list(GtkListBox *list, GtkFrame *frame,
                            const PersonArray *guests,

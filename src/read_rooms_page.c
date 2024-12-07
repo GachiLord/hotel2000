@@ -44,48 +44,43 @@ typedef struct {
   int page;
 } WidgetState;
 
-static void free_widget_state(WidgetState *s) {
-  free_room_array(s->rooms);
-  g_free(s);
-}
+static WidgetState state;
 
-static void handle_load(GtkWidget *widget, gpointer state) {
+static void handle_load(GtkWidget *widget, gpointer _) {
 
-  WidgetState *s = (WidgetState *)state;
   // fetch rooms
-  RoomArray *arr = get_rooms_by_page(s->page);
+  RoomArray *arr = get_rooms_by_page(state.page);
 
   if (arr == NULL)
     return;
 
   // render
-  render_rooms_to_list(GTK_LIST_BOX(s->list), GTK_FRAME(s->frame), arr, false);
+  render_rooms_to_list(GTK_LIST_BOX(state.list), GTK_FRAME(state.frame), arr,
+                       false);
 
   // update state
-  if (s->rooms == NULL)
-    s->rooms = arr;
+  if (state.rooms == NULL)
+    state.rooms = arr;
   else
-    extend_room_array(s->rooms, arr);
+    extend_room_array(state.rooms, arr);
 
-  s->page++;
+  state.page++;
 }
 
-static void handle_item_click(GtkWidget *_, GtkListBoxRow *row,
-                              gpointer state) {
+static void handle_item_click(GtkWidget *_, GtkListBoxRow *row, gpointer __) {
   // get room_id
-  WidgetState *s = (WidgetState *)state;
   const char *room_id =
-      s->rooms->rooms[gtk_list_box_row_get_index(row)].room_id;
+      state.rooms->rooms[gtk_list_box_row_get_index(row)].room_id;
   const char *occupancy =
-      s->rooms->rooms[gtk_list_box_row_get_index(row)].occupancy;
+      state.rooms->rooms[gtk_list_box_row_get_index(row)].occupancy;
   // invoke room updater component
-  GtkWidget *room_update = room_update_component(room_id, occupancy);
-  add_widget_to_main_stack(room_update, "temp_parent");
+  GtkWidget *room_update =
+      room_update_component(room_id, occupancy, HOME_WIDGET);
+  add_widget_to_main_stack(room_update);
 }
 
-static void handle_destroy(GtkWidget *_, gpointer state) {
-  WidgetState *s = (WidgetState *)state;
-  free_widget_state(s);
+static void handle_destroy(GtkWidget *_, gpointer __) {
+  free_room_array(state.rooms);
 }
 
 // UI
@@ -106,8 +101,7 @@ GtkWidget *read_rooms_page() {
   gtk_box_append(GTK_BOX(box), frame);
 
   // state
-  WidgetState *state = g_malloc(sizeof(WidgetState));
-  *state = (WidgetState){list, frame, NULL, 1};
+  state = (WidgetState){list, frame, NULL, 1};
 
   // controls
 
@@ -118,14 +112,14 @@ GtkWidget *read_rooms_page() {
 
   // handle search
 
-  g_signal_connect(button, "clicked", G_CALLBACK(handle_load), state);
+  g_signal_connect(button, "clicked", G_CALLBACK(handle_load), NULL);
 
   // handle item click
 
-  g_signal_connect(list, "row-activated", G_CALLBACK(handle_item_click), state);
+  g_signal_connect(list, "row-activated", G_CALLBACK(handle_item_click), NULL);
 
   // handle widget destroy
-  g_signal_connect(box, "destroy", G_CALLBACK(handle_destroy), state);
+  g_signal_connect(box, "destroy", G_CALLBACK(handle_destroy), NULL);
 
   return box;
 }

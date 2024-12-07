@@ -1,11 +1,14 @@
-#include "common.h"
 #include "goods.h"
 #include "guests.h"
 #include "login.h"
 #include "rooms.h"
 #include <gtk/gtk.h>
 
-GtkWidget *init_home_page() {
+// define app pages
+GtkWidget *HOME_WIDGET;
+// init
+
+GtkWidget *init_pages() {
   GtkWidget *stack = gtk_stack_new();
   gtk_stack_set_transition_type(GTK_STACK(stack),
                                 GTK_STACK_TRANSITION_TYPE_CROSSFADE);
@@ -15,6 +18,10 @@ GtkWidget *init_home_page() {
 
   // create app pages and put them in a stack
   GtkWidget *box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+
+  // set global home var before creating pages
+  HOME_WIDGET = box;
+
   GtkWidget *switcher = gtk_stack_switcher_new();
   GtkWidget *main_stack = gtk_stack_new();
   // pages

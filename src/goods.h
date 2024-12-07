@@ -21,10 +21,9 @@ void free_item_array(ItemArray *i);
 
 // UI
 
-typedef void (*ItemClickHandler)(GtkListBox *_, GtkListBoxRow *row,
-                                 ItemArray **arr);
+typedef void (*ItemClickHandler)(Item item, gpointer data);
 
-GtkWidget *search_goods_component(ItemClickHandler on_item_click,
-                                  bool handle_cancel, const char *parent_name);
+GtkWidget *search_goods_component(ItemClickHandler on_item_click, gpointer data,
+                                  bool handle_cancel, GtkWidget *parent);
 GtkWidget *create_goods_page();
 GtkWidget *search_goods_page();

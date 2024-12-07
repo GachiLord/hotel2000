@@ -29,4 +29,5 @@ void render_rooms_to_list(GtkListBox *list, GtkFrame *frame,
 
 GtkWidget *free_rooms_page();
 GtkWidget *read_rooms_page();
-GtkWidget *room_update_component(const char *room_id, const char *occupancy);
+GtkWidget *room_update_component(const char *room_id, const char *occupancy,
+                                 GtkWidget *parent);

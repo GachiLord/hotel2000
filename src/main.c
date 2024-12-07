@@ -1,5 +1,5 @@
 #include "database.h"
-#include "home.h"
+#include "pages.h"
 #include <gtk/gtk.h>
 #include <libpq-fe.h>
 
@@ -25,7 +25,7 @@ static void activate(GtkApplication *app, gpointer user_data) {
                                              GTK_STYLE_PROVIDER_PRIORITY_USER);
   // init pages
   APP_OVERLAY = gtk_overlay_new();
-  APP_STACK = init_home_page();
+  APP_STACK = init_pages();
   gtk_overlay_set_child(GTK_OVERLAY(APP_OVERLAY), APP_STACK);
   gtk_window_set_child(GTK_WINDOW(APP_WINDOW), APP_OVERLAY);
 

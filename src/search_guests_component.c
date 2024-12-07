@@ -1,6 +1,7 @@
 #include "common.h"
 #include "database.h"
 #include "glib-object.h"
+#include "glib.h"
 #include "guests.h"
 #include <gtk/gtk.h>
 #include <libpq-fe.h>
@@ -8,16 +9,17 @@
 // state
 
 typedef struct {
+  // component
   GtkWidget *list;
   GtkWidget *frame;
+  GtkWidget *parent;
   GtkWidget *component;
+  // callback
+  GuestClickHandler guest_click_handler;
+  gpointer component_data;
+  // data
   PersonArray *arr;
 } WidgetState;
-
-static void free_widget_state(WidgetState *s) {
-  free_person_array(s->arr);
-  g_free(s);
-}
 
 // logic
 
@@ -53,14 +55,14 @@ static PersonArray *find_guests_by_name(const char *name) {
   return arr;
 }
 
-static void handle_search(GtkWidget *widget, gpointer data) {
+static void handle_search(GtkWidget *widget, gpointer state) {
+  WidgetState *s = (WidgetState *)state;
   const char *q = gtk_editable_get_text(GTK_EDITABLE(widget));
 
   if (g_utf8_strlen(q, -1) == 0) {
     return;
   }
 
-  WidgetState *s = (WidgetState *)data;
   free_person_array(s->arr);
   s->arr = find_guests_by_name(q);
 
@@ -68,20 +70,30 @@ static void handle_search(GtkWidget *widget, gpointer data) {
                         true);
 }
 
-static void handle_close(GtkWidget *_, gpointer state) {
+static void handle_item_click(GtkListBox *self, GtkListBoxRow *row,
+                              gpointer state) {
   WidgetState *s = (WidgetState *)state;
-  gtk_stack_set_visible_child_name(APP_STACK, "temp_parent");
-  gtk_stack_remove(APP_STACK, s->component);
+  const Person p = s->arr->guests[gtk_list_box_row_get_index(row)];
+
+  s->guest_click_handler(p, s->component_data);
 }
 
-static void handle_destroy(GtkWidget *_, gpointer data) {
-  free_widget_state(data);
+static void handle_close(GtkWidget *_, gpointer state) {
+  WidgetState *s = (WidgetState *)state;
+  remove_widget_from_main_stack(s->component, s->parent);
+}
+
+static void handle_destroy(GtkWidget *_, gpointer state) {
+  WidgetState *s = (WidgetState *)state;
+  free_person_array(s->arr);
+  g_free(state);
 }
 
 // UI
 
 GtkWidget *search_guests_component(GuestClickHandler on_item_click,
-                                   bool handle_cancel) {
+                                   const gpointer data, bool handle_cancel,
+                                   GtkWidget *parent) {
   // main containers
   GtkWidget *box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
   GtkWidget *list = gtk_list_box_new();
@@ -95,7 +107,9 @@ GtkWidget *search_guests_component(GuestClickHandler on_item_click,
 
   // state
   WidgetState *state = g_malloc(sizeof(WidgetState));
-  *state = (WidgetState){list, frame, box, NULL};
+  *state = (WidgetState){
+      list, frame, parent, box, on_item_click, data, NULL,
+  };
 
   // controls
 
@@ -110,8 +124,8 @@ GtkWidget *search_guests_component(GuestClickHandler on_item_click,
   // handle click
 
   if (on_item_click != NULL) {
-    g_signal_connect(list, "row-activated", G_CALLBACK(on_item_click),
-                     &state->arr);
+    g_signal_connect(list, "row-activated", G_CALLBACK(handle_item_click),
+                     state);
   }
 
   if (handle_cancel) {

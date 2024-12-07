@@ -32,21 +32,20 @@ typedef struct {
   GtkWidget *passport;
 } WidgetState;
 
+static WidgetState state;
+
 // UI
 
-static void handle_destroy(GtkWidget *_, gpointer data) { g_free(data); }
+static void create_handler(GtkWidget *_, gpointer __) {
 
-static void create_handler(GtkWidget *_, gpointer data) {
-  WidgetState *s = (WidgetState *)data;
-
-  const char *name = gtk_editable_get_text(GTK_EDITABLE(s->name));
-  const char *phone = gtk_editable_get_text(GTK_EDITABLE(s->phone));
-  const char *passport = gtk_editable_get_text(GTK_EDITABLE(s->passport));
+  const char *name = gtk_editable_get_text(GTK_EDITABLE(state.name));
+  const char *phone = gtk_editable_get_text(GTK_EDITABLE(state.phone));
+  const char *passport = gtk_editable_get_text(GTK_EDITABLE(state.passport));
 
   if (create_guest(name, phone, passport) == 0) {
-    gtk_editable_delete_text(GTK_EDITABLE(s->name), 0, -1);
-    gtk_editable_delete_text(GTK_EDITABLE(s->phone), 0, -1);
-    gtk_editable_delete_text(GTK_EDITABLE(s->passport), 0, -1);
+    gtk_editable_delete_text(GTK_EDITABLE(state.name), 0, -1);
+    gtk_editable_delete_text(GTK_EDITABLE(state.phone), 0, -1);
+    gtk_editable_delete_text(GTK_EDITABLE(state.passport), 0, -1);
   }
 }
 
@@ -79,12 +78,9 @@ GtkWidget *create_guests_page() {
   gtk_box_append(GTK_BOX(box), button);
 
   // define state
-  WidgetState *state = g_malloc(sizeof(WidgetState));
-  *state = (WidgetState){name, phone, passport};
+  state = (WidgetState){name, phone, passport};
   // handle create
-  g_signal_connect(button, "clicked", G_CALLBACK(create_handler), state);
-  // handle destroy
-  g_signal_connect(box, "destroy", G_CALLBACK(handle_destroy), state);
+  g_signal_connect(button, "clicked", G_CALLBACK(create_handler), NULL);
 
   return box;
 }

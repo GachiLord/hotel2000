@@ -43,43 +43,38 @@ static RoomArray *get_free_rooms(int occupancy) {
 typedef struct {
   GtkWidget *list;
   GtkWidget *frame;
+
   RoomArray *rooms;
   int occupancy;
 } WidgetState;
 
-static void free_widget_state(WidgetState *s) {
-  free_room_array(s->rooms);
-  g_free(s);
+static WidgetState state;
+
+static void handle_occpancy(GtkWidget *widget, gpointer _) {
+  state.occupancy = gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(widget));
 }
 
-static void handle_occpancy(GtkWidget *widget, gpointer state) {
-  WidgetState *s = (WidgetState *)state;
-  s->occupancy = gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(widget));
+static void handle_search(GtkWidget *_, gpointer __) {
+  free_room_array(state.rooms);
+  state.rooms = get_free_rooms(state.occupancy);
+  render_rooms_to_list(GTK_LIST_BOX(state.list), GTK_FRAME(state.frame),
+                       state.rooms, true);
 }
 
-static void handle_search(GtkWidget *_, gpointer state) {
-  WidgetState *s = (WidgetState *)state;
-  free_room_array(s->rooms);
-  s->rooms = get_free_rooms(s->occupancy);
-  render_rooms_to_list(GTK_LIST_BOX(s->list), GTK_FRAME(s->frame), s->rooms,
-                       true);
-}
-
-static void handle_item_click(GtkWidget *_, GtkListBoxRow *row,
-                              gpointer state) {
+static void handle_item_click(GtkWidget *_, GtkListBoxRow *row, gpointer __) {
   // get room_id
-  WidgetState *s = (WidgetState *)state;
   const char *room_id =
-      s->rooms->rooms[gtk_list_box_row_get_index(row)].room_id;
+      state.rooms->rooms[gtk_list_box_row_get_index(row)].room_id;
   const char *occupancy =
-      s->rooms->rooms[gtk_list_box_row_get_index(row)].occupancy;
+      state.rooms->rooms[gtk_list_box_row_get_index(row)].occupancy;
   // invoke room updater component
-  GtkWidget *room_update = room_update_component(room_id, occupancy);
-  add_widget_to_main_stack(room_update, "temp_parent");
+  GtkWidget *room_update =
+      room_update_component(room_id, occupancy, HOME_WIDGET);
+  add_widget_to_main_stack(room_update);
 }
 
 static void handle_destroy(GtkWidget *_, gpointer data) {
-  free_widget_state(data);
+  free_room_array(state.rooms);
 }
 
 // ui
@@ -96,8 +91,7 @@ GtkWidget *free_rooms_page() {
   gtk_box_append(GTK_BOX(box), frame);
 
   // state
-  WidgetState *state = g_malloc(sizeof(WidgetState));
-  *state = (WidgetState){list, frame, NULL, 2};
+  state = (WidgetState){list, frame, NULL, 2};
 
   // wrapper
   GtkWidget *wrap = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
@@ -110,7 +104,7 @@ GtkWidget *free_rooms_page() {
   GtkWidget *spin_button = gtk_spin_button_new(adjustment, 1.0, 0);
   gtk_spin_button_set_numeric(GTK_SPIN_BUTTON(spin_button), true);
   g_signal_connect(spin_button, "value-changed", G_CALLBACK(handle_occpancy),
-                   state);
+                   NULL);
   gtk_box_prepend(GTK_BOX(wrap), gtk_label_new("мест(а)"));
   gtk_box_prepend(GTK_BOX(wrap), spin_button);
   gtk_box_prepend(GTK_BOX(wrap), gtk_label_new("Вместимость от"));
@@ -118,15 +112,15 @@ GtkWidget *free_rooms_page() {
   GtkWidget *button = gtk_button_new_with_label("Поиск свободных номеров");
   gtk_widget_set_size_request(button, -1, 40);
   gtk_widget_set_halign(button, GTK_ALIGN_CENTER);
-  g_signal_connect(button, "clicked", G_CALLBACK(handle_search), state);
+  g_signal_connect(button, "clicked", G_CALLBACK(handle_search), NULL);
   gtk_box_prepend(GTK_BOX(wrap), button);
 
   // handle item click
 
-  g_signal_connect(list, "row-activated", G_CALLBACK(handle_item_click), state);
+  g_signal_connect(list, "row-activated", G_CALLBACK(handle_item_click), NULL);
 
   // handle destroy
-  g_signal_connect(box, "destroy", G_CALLBACK(handle_destroy), state);
+  g_signal_connect(box, "destroy", G_CALLBACK(handle_destroy), NULL);
 
   return box;
 }

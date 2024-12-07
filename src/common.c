@@ -16,13 +16,13 @@ static gboolean remove_overlay() {
   return false;
 }
 
-void add_widget_to_main_stack(GtkWidget *widget, const char *name) {
-  gtk_stack_add_named(APP_STACK, widget, name);
+void add_widget_to_main_stack(GtkWidget *widget) {
+  gtk_stack_add_child(APP_STACK, widget);
   gtk_stack_set_visible_child(APP_STACK, widget);
 }
 
-void remove_widget_from_main_stack(GtkWidget *widget) {
-  gtk_stack_set_visible_child_name(APP_STACK, "home");
+void remove_widget_from_main_stack(GtkWidget *widget, GtkWidget *parent) {
+  gtk_stack_set_visible_child(APP_STACK, parent);
   gtk_stack_remove(APP_STACK, widget);
 }
 

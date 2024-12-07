@@ -1,5 +1,6 @@
 #include "common.h"
 #include "glib.h"
+#include "goods.h"
 #include "guests.h"
 #include <gtk/gtk.h>
 #include <libpq-fe.h>
@@ -11,9 +12,9 @@ typedef struct {
   GtkLabel *name;
   GtkLabel *passport;
   GtkLabel *phone;
+  GtkWidget *parent;
 
-  char *guest_id;
-  const char *parent_name;
+  const char *guest_id;
 } WidgetState;
 
 static WidgetState state;
@@ -72,25 +73,26 @@ static void handle_save(GtkWidget *_, gpointer __) {
 
 // manage orders
 
-static void handle_add_order(GtkWidget *_, gpointer __) { g_print("stub\n"); }
+static void handle_order_choose(GtkListBox *widget, GtkListBoxRow *row,
+                                ItemArray **goods) {}
+
+static void handle_add_order(GtkWidget *_, gpointer __) {
+  // GtkWidget *search = search_goods_component(handle_order_choose, false,
+  // state.component); gtk_stack_add_child(GTK_STACK search);
+}
 
 // handle destroy
 
 static void handle_close(GtkWidget *_, gpointer __) {
-  gtk_stack_set_visible_child_name(APP_STACK, state.parent_name);
-  gtk_stack_remove(APP_STACK, state.component);
-}
-
-static void handle_destroy(GtkWidget *_, gpointer __) {
-  g_free(state.guest_id);
+  remove_widget_from_main_stack(state.component, state.parent);
 }
 
 // UI
 
-GtkWidget *guest_update_component(const char *guest_id,
-                                  const char *parent_name) {
+GtkWidget *guest_update_component(const char *guest_id, GtkWidget *parent) {
   // fetch guest's data
   Person *guest = get_guest(guest_id);
+  g_assert(guest != NULL);
   // main containers
   GtkWidget *main_box_wrapper = gtk_box_new(GTK_ORIENTATION_VERTICAL, 100);
   GtkWidget *main_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 300);
@@ -166,9 +168,8 @@ GtkWidget *guest_update_component(const char *guest_id,
   gtk_box_prepend(GTK_BOX(main_box_wrapper), close_button);
 
   // init state
-  state =
-      (WidgetState){main_box_wrapper, GTK_LABEL(name),    GTK_LABEL(passport),
-                    GTK_LABEL(phone), g_strdup(guest_id), parent_name};
+  state = (WidgetState){main_box_wrapper, GTK_LABEL(name), GTK_LABEL(passport),
+                        GTK_LABEL(phone), parent,          guest_id};
 
   // handle signals
 
@@ -177,9 +178,6 @@ GtkWidget *guest_update_component(const char *guest_id,
   g_signal_connect(close_button, "clicked", G_CALLBACK(handle_close), NULL);
 
   g_signal_connect(add_order_button, "clicked", G_CALLBACK(handle_add_order),
-                   NULL);
-
-  g_signal_connect(main_box_wrapper, "destroy", G_CALLBACK(handle_destroy),
                    NULL);
 
   return main_box_wrapper;

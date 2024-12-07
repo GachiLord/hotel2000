@@ -9,7 +9,7 @@ void free_person_array(PersonArray *arr) {
     return;
 
   for (gsize i = 0; i < arr->len; i++) {
-    free_person_fields(&arr->guests[i]);
+    free_person_fields(arr->guests + i);
   }
   g_free(arr->guests);
   g_free(arr);
@@ -27,9 +27,27 @@ void free_person(Person *p) {
   g_free(p);
 }
 
-PersonArray *push_person_array(PersonArray *self, const Person *item) {
+Person person_copy(Person p) {
+  return (Person){
+      g_strdup(p.id),
+      g_strdup(p.name),
+      g_strdup(p.passport),
+      g_strdup(p.phone),
+  };
+}
+
+PersonArray *new_person_array(gsize len) {
+  Person *p = g_malloc(sizeof(Person) * len);
+  PersonArray *arr = g_malloc(sizeof(PersonArray));
+
+  *arr = (PersonArray){p, len};
+
+  return arr;
+}
+
+PersonArray *push_person_array(PersonArray *self, Person item) {
   self->guests = g_realloc(self->guests, (self->len + 1) * sizeof(Person));
-  self->guests[self->len] = *item;
+  self->guests[self->len] = item;
   self->len++;
   return self;
 }
