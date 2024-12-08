@@ -15,7 +15,7 @@ WidgetState state;
 
 static int create_item(const char *title, double price) {
   char *query;
-  asprintf(&query, "call create_item('%s', %f::float8::numeric::money)", title,
+  asprintf(&query, "call create_item('%s', %lf::float8::numeric::money)", title,
            price);
 
   PGresult *res = PQexec(DB_STATE->conn, query);

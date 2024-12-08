@@ -65,7 +65,7 @@ END;$$;
 CREATE TABLE IF NOT EXISTS guest_journal (
   guest_id integer,
   is_check_in Boolean,
-  created_at timestamp DEFAULT current_date,
+  created_at timestamp DEFAULT now(),
   FOREIGN KEY(guest_id) REFERENCES guests(guest_id) ON DELETE SET NULL
 );
 
@@ -329,13 +329,17 @@ BEGIN
 END;$$;
 
 CREATE OR REPLACE FUNCTION find_goods (
-  title varchar(50)
+  t varchar(50)
 )
-RETURNS SETOF goods
+RETURNS TABLE(
+  item_id int,
+  title varchar(200),
+  price float8
+)
 LANGUAGE PLPGSQL
 AS $$
 BEGIN
-  RETURN QUERY SELECT * FROM goods WHERE goods.title ILIKE '%' || find_goods.title || '%' LIMIT 20;
+  RETURN QUERY SELECT goods.item_id, goods.title, goods.price::numeric::float8 FROM goods WHERE goods.title ILIKE '%' || find_goods.t || '%' LIMIT 20;
 END;$$;
 
 CREATE OR REPLACE PROCEDURE update_item (
@@ -362,46 +366,57 @@ END;$$;
 -- orders
 
 CREATE TABLE IF NOT EXISTS orders (
+  order_id SERIAL PRIMARY KEY,
   has_paid Boolean NOT NULL DEFAULT false,
   guest_id int NOT NULL,
   item_id int NOT NULL,
   sold_for money NOT NULL,
-  created_at timestamp,
+  amount int NOT NULL DEFAULT 1,
+  created_at timestamp DEFAULT now(),
   FOREIGN KEY(guest_id) REFERENCES guests(guest_id) ON DELETE SET NULL,
   FOREIGN KEY(item_id) REFERENCES goods(item_id) ON DELETE SET NULL
 );
 
 
-CREATE OR REPLACE PROCEDURE create_order (
+CREATE OR REPLACE FUNCTION create_order (
   guest_id int,
-  item_id int
+  item_id int,
+  price money
+)
+RETURNS TABLE(
+  order_id int
 )
 LANGUAGE PLPGSQL
 AS $$
 BEGIN
-  INSERT INTO orders(guest_id, item_id) VALUES(guest_id, item_id);
+  RETURN QUERY INSERT INTO orders(guest_id, item_id, sold_for) VALUES(create_order.guest_id, create_order.item_id, create_order.price) RETURNING orders.order_id;
 END;$$;
 
 CREATE OR REPLACE FUNCTION read_guest_orders (
   guest_id int
 )
-RETURNS SETOF pricing
-LANGUAGE PLPGSQL
-AS $$
-BEGIN
-  RETURN QUERY SELECT pricing.title, pricing.price, orders.has_paid FROM pricing 
-    INNER JOIN orders ON orders.item_id = pricing.item_id
-    WHERE orders.guest_id = guest_id;
-END;$$;
-
-CREATE OR REPLACE PROCEDURE pay_order (
-  guest_id int,
-  item_id int
+RETURNS TABLE (
+  order_id int,
+  has_paid Boolean,
+  sold_for float8,
+  amount int,
+  title varchar(200)
 )
 LANGUAGE PLPGSQL
 AS $$
 BEGIN
-  UPDATE orders SET has_paid = true WHERE guest_id = guest_id AND item_id = item_id;
+  RETURN QUERY SELECT orders.order_id, orders.has_paid, orders.sold_for::money::numeric::float8, orders.amount, goods.title FROM goods 
+    INNER JOIN orders ON orders.item_id = goods.item_id
+    WHERE orders.guest_id = read_guest_orders.guest_id ORDER BY order_id ASC;
+END;$$;
+
+CREATE OR REPLACE PROCEDURE pay_order (
+  order_id int
+)
+LANGUAGE PLPGSQL
+AS $$
+BEGIN
+  UPDATE orders SET has_paid = true WHERE guest_id = guest_id AND orders.order_id = pay_order.item_id;
 END;$$;
 
 -- user creation

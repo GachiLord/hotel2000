@@ -128,7 +128,8 @@ static void handle_destroy(GtkWidget *_, gpointer state) {
 // UI
 
 GtkWidget *search_goods_component(ItemClickHandler on_item_click, gpointer data,
-                                  bool handle_cancel, GtkWidget *parent) {
+                                  bool should_handle_cancel,
+                                  GtkWidget *parent) {
   // main containers
   GtkWidget *box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
   GtkWidget *list = gtk_list_box_new();
@@ -167,7 +168,7 @@ GtkWidget *search_goods_component(ItemClickHandler on_item_click, gpointer data,
                      state);
   }
 
-  if (handle_cancel) {
+  if (should_handle_cancel) {
     GtkWidget *cancel_button = gtk_button_new_with_label("Отмена");
     gtk_widget_set_halign(cancel_button, GTK_ALIGN_START);
     gtk_widget_set_margin_start(cancel_button, 10);
