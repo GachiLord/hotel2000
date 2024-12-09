@@ -50,6 +50,8 @@ void push_order_array(OrderArray *self, Order order) {
 }
 
 OrderArray *remove_order_array(OrderArray *self, gsize index) {
+  free_order_fields(self->arr + index);
+
   if (index != self->len - 1)
     memmove(self->arr + index, self->arr + index + 1,
             (self->len - index - 1) * sizeof(Order));

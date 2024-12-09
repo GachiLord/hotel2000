@@ -410,13 +410,27 @@ BEGIN
     WHERE orders.guest_id = read_guest_orders.guest_id ORDER BY order_id ASC;
 END;$$;
 
-CREATE OR REPLACE PROCEDURE pay_order (
+CREATE OR REPLACE PROCEDURE update_order (
+  order_id int,
+  sold_for money,
+  amount int,
+  has_paid Boolean
+)
+LANGUAGE PLPGSQL
+AS $$
+BEGIN
+  UPDATE orders 
+    SET sold_for = update_order.sold_for, amount = update_order.amount, has_paid = update_order.has_paid 
+    WHERE orders.order_id = update_order.order_id;
+END;$$;
+
+CREATE OR REPLACE PROCEDURE delete_order (
   order_id int
 )
 LANGUAGE PLPGSQL
 AS $$
 BEGIN
-  UPDATE orders SET has_paid = true WHERE guest_id = guest_id AND orders.order_id = pay_order.item_id;
+  DELETE FROM orders WHERE orders.order_id = delete_order.order_id;
 END;$$;
 
 -- user creation

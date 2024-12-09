@@ -146,12 +146,49 @@ static int create_order(const char *guest_id, const char *item_id,
   return id;
 }
 
+static int update_order(const char *order_id, double sold_for, int amount,
+                        bool has_paid) {
+  char *query;
+  asprintf(&query,
+           "call update_order(%s, %lf::float8::numeric::money, %d, "
+           "%d::int::boolean)",
+           order_id, sold_for, amount, has_paid);
+
+  PGresult *res = PQexec(DB_STATE->conn, query);
+  g_free(query);
+
+  if (handle_db_error(res, "Не удалось выполнить запрос") != 0) {
+    return -1;
+  }
+
+  show_toast("Изменения сохранены");
+  PQclear(res);
+
+  return 0;
+}
+
+static int delete_order(const char *order_id) {
+  char *query;
+  asprintf(&query, "call delete_order(%s)", order_id);
+
+  PGresult *res = PQexec(DB_STATE->conn, query);
+  g_free(query);
+
+  if (handle_db_error(res, "Не удалось выполнить запрос") != 0) {
+    return -1;
+  }
+
+  show_toast("Заказ удален");
+  PQclear(res);
+
+  return 0;
+}
+
 static void handle_item_save(GtkWidget *widget, gpointer state) {
   WidgetState *s = (WidgetState *)state;
 
   GtkWidget *grid = gtk_widget_get_parent(widget);
   GtkListBoxRow *row = GTK_LIST_BOX_ROW(gtk_widget_get_parent(grid));
-  GtkWidget *child = gtk_widget_get_first_child(grid);
 
   GtkGrid *g = GTK_GRID(grid);
 
@@ -164,16 +201,38 @@ static void handle_item_save(GtkWidget *widget, gpointer state) {
       GTK_SPIN_BUTTON(gtk_grid_get_child_at(g, 4, 0)));
   bool has_paid = gtk_check_button_get_active(
       GTK_CHECK_BUTTON(gtk_grid_get_child_at(g, 5, 0)));
-  g_print("%lf %d %b\n", price, amount, has_paid);
+  update_order(order_id, price, amount, has_paid);
 }
 
-static GtkWidget *new_order_list_item(Order *order, WidgetState *s) {
+static void handle_item_delete(GtkWidget *widget, gpointer state) {
+  WidgetState *s = (WidgetState *)state;
+
+  GtkWidget *grid = gtk_widget_get_parent(widget);
+  GtkWidget *row = gtk_widget_get_parent(grid);
+  GtkWidget *list = gtk_widget_get_parent(GTK_WIDGET(row));
+
+  int row_index = gtk_list_box_row_get_index(GTK_LIST_BOX_ROW(row));
+  const char *order_id = s->orders->arr[row_index].order_id;
+
+  // remove from db
+  if (delete_order(order_id) != 0)
+    return;
+  // update state
+  remove_order_array(s->orders, row_index);
+  // render
+  gtk_list_box_remove(GTK_LIST_BOX(list), row);
+  if (s->orders->len == 0) {
+    gtk_widget_set_visible(GTK_WIDGET(s->frame), false);
+  }
+}
+
+static GtkWidget *new_order_list_item(Order order, WidgetState *s) {
 
   GtkWidget *item = gtk_grid_new();
   gtk_widget_set_halign(item, GTK_ALIGN_END);
   gtk_widget_set_size_request(item, 500, 50);
 
-  GtkWidget *title = gtk_label_new(order->title);
+  GtkWidget *title = gtk_label_new(order.title);
   gtk_widget_set_margin_start(title, 10);
   gtk_widget_set_margin_top(title, 10);
   gtk_grid_attach(GTK_GRID(item), title, 0, 0, 1, 1);
@@ -184,7 +243,7 @@ static GtkWidget *new_order_list_item(Order *order, WidgetState *s) {
   gtk_grid_attach_next_to(GTK_GRID(item), price, title, GTK_POS_RIGHT, 1, 1);
 
   GtkAdjustment *price_adjustment =
-      gtk_adjustment_new(order->sold_for, 0.0, 100000.0, 1.0, 5.0, 0.0);
+      gtk_adjustment_new(order.sold_for, 0.0, 100000.0, 1.0, 5.0, 0.0);
   GtkWidget *price_button = gtk_spin_button_new(price_adjustment, 1.0, 0);
   gtk_widget_set_margin_start(price_button, 10);
   gtk_widget_set_margin_top(price_button, 10);
@@ -198,7 +257,7 @@ static GtkWidget *new_order_list_item(Order *order, WidgetState *s) {
                           1, 1);
 
   GtkAdjustment *amount_adjustment =
-      gtk_adjustment_new(order->amount, 1.0, 100000.0, 1.0, 5.0, 0.0);
+      gtk_adjustment_new(order.amount, 1.0, 100000.0, 1.0, 5.0, 0.0);
   GtkWidget *amount_button = gtk_spin_button_new(amount_adjustment, 1.0, 0);
   gtk_widget_set_margin_start(amount_button, 10);
   gtk_widget_set_margin_top(amount_button, 10);
@@ -206,6 +265,8 @@ static GtkWidget *new_order_list_item(Order *order, WidgetState *s) {
                           1, 1);
 
   GtkWidget *has_paid_button = gtk_check_button_new_with_label("Оплачено");
+  gtk_check_button_set_active(GTK_CHECK_BUTTON(has_paid_button),
+                              order.has_paid);
   gtk_widget_set_margin_start(has_paid_button, 10);
   gtk_widget_set_margin_top(has_paid_button, 10);
   gtk_grid_attach_next_to(GTK_GRID(item), has_paid_button, amount_button,
@@ -223,6 +284,7 @@ static GtkWidget *new_order_list_item(Order *order, WidgetState *s) {
   gtk_widget_set_margin_top(delete_button, 10);
   gtk_grid_attach_next_to(GTK_GRID(item), delete_button, save_button,
                           GTK_POS_RIGHT, 1, 1);
+  g_signal_connect(delete_button, "clicked", G_CALLBACK(handle_item_delete), s);
 
   return item;
 }
@@ -237,7 +299,7 @@ static void render_orders(WidgetState *s) {
   gtk_widget_set_visible(GTK_WIDGET(s->frame), true);
 
   for (gsize i = 0; i < s->orders->len; i++) {
-    Order *order = s->orders->arr + i;
+    Order order = s->orders->arr[i];
 
     gtk_list_box_append(GTK_LIST_BOX(s->list), new_order_list_item(order, s));
   }
@@ -258,7 +320,8 @@ static void handle_order_choose(const Item item, gpointer state) {
   push_order_array(s->orders, order);
   // render
   show_toast("Товар добавлен");
-  gtk_list_box_append(GTK_LIST_BOX(s->list), new_order_list_item(&order, s));
+  gtk_list_box_append(GTK_LIST_BOX(s->list), new_order_list_item(order, s));
+  gtk_widget_set_visible(GTK_WIDGET(s->frame), true);
 }
 
 static void handle_add_order(GtkWidget *_, gpointer state) {
