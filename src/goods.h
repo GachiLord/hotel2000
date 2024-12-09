@@ -48,5 +48,7 @@ typedef void (*ItemClickHandler)(Item item, gpointer data);
 
 GtkWidget *search_goods_component(ItemClickHandler on_item_click, gpointer data,
                                   bool handle_cancel, GtkWidget *parent);
+GtkWidget *goods_update_component(const char *item_id, GtkWidget *parent);
+
 GtkWidget *create_goods_page();
 GtkWidget *search_goods_page();

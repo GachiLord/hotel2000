@@ -321,7 +321,7 @@ END;$$;
 CREATE OR REPLACE FUNCTION read_items_by_page (
   page int
 )
-RETURNS SETOF pricing
+RETURNS SETOF goods
 LANGUAGE PLPGSQL
 AS $$
 BEGIN
@@ -342,6 +342,21 @@ BEGIN
   RETURN QUERY SELECT goods.item_id, goods.title, goods.price::numeric::float8 FROM goods WHERE goods.title ILIKE '%' || find_goods.t || '%' LIMIT 20;
 END;$$;
 
+CREATE OR REPLACE FUNCTION read_item (
+  id int
+)
+RETURNS TABLE(
+  item_id int,
+  title varchar(200),
+  price float8
+)
+LANGUAGE PLPGSQL
+AS $$
+BEGIN
+  RETURN QUERY SELECT goods.item_id, goods.title, goods.price::numeric::float8 FROM goods WHERE goods.item_id = id;
+END;$$;
+
+
 CREATE OR REPLACE PROCEDURE update_item (
   item_id int,
   title varchar(200),
@@ -350,7 +365,7 @@ CREATE OR REPLACE PROCEDURE update_item (
 LANGUAGE PLPGSQL
 AS $$
 BEGIN
-  UPDATE goods SET title = title, price = price WHERE item_id = item_id;
+  UPDATE goods SET title = update_item.title, price = update_item.price WHERE goods.item_id = update_item.item_id;
 END;$$;
 
 CREATE OR REPLACE PROCEDURE delete_item (

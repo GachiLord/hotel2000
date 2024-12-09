@@ -8,8 +8,7 @@
 // logic
 
 static void handle_item_click(const Item item, gpointer _) {
-  g_print("%s\n", item.title);
-  // TODO:
+  add_widget_to_main_stack(goods_update_component(item.item_id, HOME_WIDGET));
 }
 
 // UI
