@@ -15,8 +15,10 @@ CREATE OR REPLACE PROCEDURE create_guest (
 )
 LANGUAGE PLPGSQL
 AS $$
+DECLARE id integer;
 BEGIN
-  INSERT INTO guests(name, passport, phone) VALUES (name, passport, phone);
+  INSERT INTO guests(name, passport, phone) VALUES (name, passport, phone) RETURNING guest_id INTO id;
+  INSERT INTO guest_journal(guest_id, is_check_in) VALUES (id, true);
 END;$$;
 
 CREATE OR REPLACE FUNCTION find_guests (
@@ -290,13 +292,13 @@ BEGIN
 END;$$;
 
 CREATE OR REPLACE PROCEDURE check_out_guest (
-  guest_id int,
-  room_id int
+  id int
 )
 LANGUAGE PLPGSQL
 AS $$
 BEGIN
-  DELETE FROM rooms_guests WHERE rooms_guests.guest_id = check_out_guest.guest_id AND rooms_guests.room_id = check_out_guest.room_id;
+  INSERT INTO guest_journal (guest_id, is_check_in) VALUES (id, false);
+  DELETE FROM guests WHERE guest_id = id;
 END;$$;
 
 -- pricing
@@ -383,8 +385,8 @@ END;$$;
 CREATE TABLE IF NOT EXISTS orders (
   order_id SERIAL PRIMARY KEY,
   has_paid Boolean NOT NULL DEFAULT false,
-  guest_id int NOT NULL,
-  item_id int NOT NULL,
+  guest_id int,
+  item_id int,
   sold_for money NOT NULL,
   amount int NOT NULL DEFAULT 1,
   created_at timestamp DEFAULT now(),

@@ -80,6 +80,30 @@ static void handle_save(GtkWidget *_, gpointer state) {
   update_guest(s->guest_id, name, passport, phone);
 }
 
+static int check_out(const char *guest_id) {
+  char *query;
+  asprintf(&query, "call check_out_guest(%s)", guest_id);
+
+  PGresult *res = PQexec(DB_STATE->conn, query);
+  g_free(query);
+
+  if (handle_db_error(res, "Не удалось выполнить запрос") != 0) {
+    return -1;
+  }
+  PQclear(res);
+  show_toast("Операция выполнена");
+  return 0;
+}
+
+static void handle_checkout(GtkWidget *_, gpointer state) {
+  WidgetState *s = (WidgetState *)state;
+
+  if (check_out(s->guest_id) != 0)
+    return;
+
+  remove_widget_from_main_stack(s->component, s->parent);
+}
+
 // manage orders
 
 static OrderArray *get_guest_orders(const char *guest_id) {
@@ -397,11 +421,22 @@ GtkWidget *guest_update_component(const char *guest_id, GtkWidget *parent) {
   // free guest cause no longer needed
   free_person(guest);
 
+  GtkWidget *user_action_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 20);
+  gtk_widget_set_halign(user_action_box, GTK_ALIGN_CENTER);
+
   GtkWidget *save_button = gtk_button_new_with_label("Сохранить");
   gtk_widget_set_size_request(save_button, -1, 40);
   gtk_widget_set_halign(save_button, GTK_ALIGN_CENTER);
   gtk_widget_set_valign(save_button, GTK_ALIGN_START);
-  gtk_box_append(GTK_BOX(user_box), save_button);
+  gtk_box_append(GTK_BOX(user_action_box), save_button);
+
+  GtkWidget *checkout_button = gtk_button_new_with_label("Выселить");
+  gtk_widget_set_size_request(checkout_button, -1, 40);
+  gtk_widget_set_halign(checkout_button, GTK_ALIGN_CENTER);
+  gtk_widget_set_valign(checkout_button, GTK_ALIGN_START);
+  gtk_box_append(GTK_BOX(user_action_box), checkout_button);
+
+  gtk_box_append(GTK_BOX(user_box), user_action_box);
 
   // orders editor
   GtkWidget *order_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
@@ -449,6 +484,9 @@ GtkWidget *guest_update_component(const char *guest_id, GtkWidget *parent) {
   render_orders(state);
 
   // handle signals
+
+  g_signal_connect(checkout_button, "clicked", G_CALLBACK(handle_checkout),
+                   state);
 
   g_signal_connect(save_button, "clicked", G_CALLBACK(handle_save), state);
 
