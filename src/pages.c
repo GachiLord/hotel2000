@@ -2,6 +2,7 @@
 #include "guests.h"
 #include "login.h"
 #include "rooms.h"
+#include "user.h"
 #include <gtk/gtk.h>
 
 // define app pages
@@ -31,6 +32,8 @@ GtkWidget *init_pages() {
   GtkWidget *guest_search = search_guests_page();
   GtkWidget *goods_create = create_goods_page();
   GtkWidget *goods_search = search_goods_page();
+  GtkWidget *user_create = create_user_page();
+  GtkWidget *read_users = read_users_page();
   gtk_stack_add_titled(GTK_STACK(main_stack), free_rooms, "free_rooms",
                        "Поиск номеров");
   gtk_stack_add_titled(GTK_STACK(main_stack), read_rooms, "read_rooms",
@@ -43,6 +46,10 @@ GtkWidget *init_pages() {
                        "Создание товаров");
   gtk_stack_add_titled(GTK_STACK(main_stack), goods_search, "search_goods",
                        "Поиск товаров");
+  gtk_stack_add_titled(GTK_STACK(main_stack), user_create, "create_users",
+                       "Создание пользователей");
+  gtk_stack_add_titled(GTK_STACK(main_stack), read_users, "read_users",
+                       "Просмотр пользователей");
   // bind switcher to main_stack and change the animation
   gtk_stack_switcher_set_stack(GTK_STACK_SWITCHER(switcher),
                                GTK_STACK(main_stack));

@@ -65,10 +65,8 @@ END;$$;
 -- guest journal
 
 CREATE TABLE IF NOT EXISTS guest_journal (
-  guest_id integer,
   is_check_in Boolean,
-  created_at timestamp DEFAULT now(),
-  FOREIGN KEY(guest_id) REFERENCES guests(guest_id) ON DELETE SET NULL
+  created_at timestamp DEFAULT now()
 );
 
 CREATE OR REPLACE PROCEDURE create_journal_record (
@@ -450,7 +448,7 @@ BEGIN
   DELETE FROM orders WHERE orders.order_id = delete_order.order_id;
 END;$$;
 
--- user creation
+-- user mangement
 
 CREATE OR REPLACE PROCEDURE create_user (
   login varchar(50),
@@ -477,6 +475,27 @@ BEGIN
   END IF;
 END;$$;
 
+CREATE OR REPLACE FUNCTION read_users()
+RETURNS TABLE(
+  login name
+)
+LANGUAGE PLPGSQL
+AS $$
+BEGIN
+  RETURN QUERY SELECT usename as login FROM pg_catalog.pg_user WHERE usename != 'postgres';
+END;$$;
+
+CREATE OR REPLACE PROCEDURE delete_user (
+  login varchar(50)
+)
+LANGUAGE PLPGSQL
+AS $$
+BEGIN
+  EXECUTE FORMAT(
+    'DROP USER %s', login
+  );
+END;$$;
+
 -- permissions 
 
 GRANT SELECT ON TABLE guests TO viewer;
@@ -489,8 +508,6 @@ GRANT EXECUTE ON FUNCTION read_items_by_page TO viewer;
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE guests TO hostess;
 GRANT SELECT ON TABLE employees TO hostess;
-GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE keys TO hostess;
-GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE rooms_keys TO hostess;
 GRANT SELECT ON TABLE rooms TO hostess;
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE rooms_guests TO hostess;
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE orders TO hostess;

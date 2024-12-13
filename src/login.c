@@ -18,7 +18,7 @@ static void login_handler(GtkWidget *widget, gpointer data) {
     const gsize len = g_utf8_strlen(text, -1);                                 \
                                                                                \
     if (len > 0) {                                                             \
-      DB_STATE->field = g_realloc(DB_STATE->field, len);                       \
+      DB_STATE->field = g_realloc(DB_STATE->field, len + 1);                   \
       g_stpcpy(DB_STATE->field, text);                                         \
     } else {                                                                   \
       DB_STATE->field[0] = '\0';                                               \
