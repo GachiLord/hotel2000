@@ -75,7 +75,7 @@ static void handle_item_click(GtkListBox *self, GtkListBoxRow *row,
   WidgetState *s = (WidgetState *)state;
   const Person p = s->arr->guests[gtk_list_box_row_get_index(row)];
 
-  s->guest_click_handler(p, s->component_data);
+  s->guest_click_handler(row, p, s->component_data);
 }
 
 static void handle_close(GtkWidget *_, gpointer state) {

@@ -26,13 +26,18 @@ PersonArray *remove_person_array(PersonArray *self, gsize index);
 
 // UI
 
-typedef void (*GuestClickHandler)(const Person guest, gpointer data);
+typedef void (*GuestClickHandler)(GtkListBoxRow *row, const Person guest,
+                                  gpointer data);
+typedef void (*GuestUpdateHandler)(const char *name, const char *passport,
+                                   const char *phone, gpointer data);
 
 GtkWidget *create_guests_page();
 GtkWidget *search_guests_page();
 GtkWidget *search_guests_component(GuestClickHandler, gpointer data,
                                    bool handle_cancel, GtkWidget *parent);
-GtkWidget *guest_update_component(const char *guest_id, GtkWidget *parent);
+GtkWidget *guest_update_component(const char *guest_id, GtkWidget *parent,
+                                  GuestUpdateHandler update_handler,
+                                  gpointer data);
 
 void render_guests_to_list(GtkListBox *list, GtkFrame *frame,
                            const PersonArray *guests,

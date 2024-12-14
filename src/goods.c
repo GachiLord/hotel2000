@@ -43,6 +43,15 @@ void free_order_array(OrderArray *o) {
   g_free(o);
 }
 
+OrderArray *new_order_array(gsize len) {
+  OrderArray *arr = g_malloc(sizeof(OrderArray));
+  Order *ptr = g_malloc(sizeof(Order) * len);
+
+  *arr = (OrderArray){ptr, len};
+
+  return arr;
+}
+
 void push_order_array(OrderArray *self, Order order) {
   self->arr = g_realloc(self->arr, (self->len + 1) * sizeof(Order));
   self->arr[self->len] = order;

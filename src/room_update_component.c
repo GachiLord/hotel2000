@@ -85,6 +85,31 @@ static int remove_guest_from_room(const char *room_id, const char *guest_id) {
   return 0;
 }
 
+static void handle_guest_update(const char *name, const char *passport,
+                                const char *phone, gpointer data) {
+  GtkListBoxRow *row = GTK_LIST_BOX_ROW(data);
+  GtkCenterBox *box = GTK_CENTER_BOX(gtk_list_box_row_get_child(row));
+
+  GtkLabel *name_l = GTK_LABEL(gtk_center_box_get_start_widget(box));
+  GtkLabel *passport_l = GTK_LABEL(gtk_center_box_get_center_widget(box));
+  GtkLabel *phone_l = GTK_LABEL(gtk_center_box_get_end_widget(box));
+
+  char *name_s;
+  asprintf(&name_s, "ФИО: %s", name);
+  gtk_label_set_text(name_l, name_s);
+  g_free(name_s);
+
+  char *passport_s;
+  asprintf(&passport_s, "Паспорт: %s", passport);
+  gtk_label_set_text(passport_l, passport_s);
+  g_free(passport_s);
+
+  char *phone_s;
+  asprintf(&phone_s, "Телефон: %s", phone);
+  gtk_label_set_text(phone_l, phone_s);
+  g_free(phone_s);
+}
+
 static void handle_guest_click(GtkListBox *_, GtkListBoxRow *row,
                                gpointer state) {
   WidgetState *s = (WidgetState *)state;
@@ -98,12 +123,14 @@ static void handle_guest_click(GtkListBox *_, GtkListBoxRow *row,
       show_toast("Гость удален");
     }
   } else {
-    add_widget_to_main_stack(guest_update_component(guest_id, s->component));
+    add_widget_to_main_stack(guest_update_component(guest_id, s->component,
+                                                    handle_guest_update, row));
   }
 }
 
 // adding new users
-static void handle_new_guest_choose(const Person guest, gpointer state) {
+static void handle_new_guest_choose(GtkListBoxRow *_, const Person guest,
+                                    gpointer state) {
   WidgetState *s = (WidgetState *)state;
   // check if guest is present in the array
   for (gsize i = 0; s->arr != NULL && i < s->arr->len; i++) {

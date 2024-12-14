@@ -39,16 +39,20 @@ typedef struct {
 void free_order_fields(Order *o);
 void free_order(Order *o);
 void free_order_array(OrderArray *o);
+OrderArray *new_order_array(gsize len);
 void push_order_array(OrderArray *self, Order order);
 OrderArray *remove_order_array(OrderArray *self, gsize index);
 
 // UI
 
-typedef void (*ItemClickHandler)(Item item, gpointer data);
+typedef void (*ItemClickHandler)(GtkListBoxRow *row, Item item, gpointer data);
+typedef void (*ItemUpdateHandler)(const char *title, double price,
+                                  gpointer data);
 
 GtkWidget *search_goods_component(ItemClickHandler on_item_click, gpointer data,
                                   bool handle_cancel, GtkWidget *parent);
-GtkWidget *goods_update_component(const char *item_id, GtkWidget *parent);
+GtkWidget *goods_update_component(ItemUpdateHandler, const char *item_id,
+                                  GtkWidget *parent, gpointer data);
 
 GtkWidget *create_goods_page();
 GtkWidget *search_goods_page();

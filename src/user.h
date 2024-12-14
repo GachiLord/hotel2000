@@ -16,6 +16,7 @@ typedef struct {
 } UserArray;
 
 void free_user_array(UserArray *users);
+UserArray *remove_user_array(UserArray *users, gsize index);
 
 // UI
 

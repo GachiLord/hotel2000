@@ -1,6 +1,6 @@
 #include "common.h"
-#include "gtk/gtkshortcut.h"
 #include "user.h"
+#include <glib.h>
 #include <gtk/gtk.h>
 
 // state
@@ -57,7 +57,15 @@ static int delete_user(const char *login) {
   return 0;
 }
 
-static void handle_delete(GtkWidget *_, gpointer login) { delete_user(login); }
+static void handle_delete(GtkWidget *_, gpointer data) {
+  int index = GPOINTER_TO_INT(data);
+  if (delete_user(state.users->arr[index].login) == 0) {
+    GtkListBoxRow *row = gtk_list_box_get_row_at_index(state.list, index);
+    GtkWidget *label = gtk_label_new("Удалено");
+    gtk_widget_set_size_request(label, 500, 40);
+    gtk_list_box_row_set_child(row, label);
+  }
+}
 
 static void render_items(WidgetState *s) {
   if (s->users == NULL) {
@@ -80,7 +88,7 @@ static void render_items(WidgetState *s) {
     gtk_widget_set_margin_end(title, 10);
     gtk_center_box_set_end_widget(GTK_CENTER_BOX(item), delete_button);
     g_signal_connect(delete_button, "clicked", G_CALLBACK(handle_delete),
-                     s->users->arr->login);
+                     GINT_TO_POINTER(i));
 
     gtk_list_box_append(GTK_LIST_BOX(s->list), item);
   }

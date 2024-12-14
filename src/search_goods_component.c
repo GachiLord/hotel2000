@@ -110,7 +110,7 @@ static void handle_item_click(GtkListBox *_, GtkListBoxRow *row,
   WidgetState *s = (WidgetState *)state;
   Item item = s->items->arr[gtk_list_box_row_get_index(row)];
 
-  s->item_click_handler(item, s->component_data);
+  s->item_click_handler(row, item, s->component_data);
 }
 
 static void handle_cancel(GtkWidget *_, gpointer state) {

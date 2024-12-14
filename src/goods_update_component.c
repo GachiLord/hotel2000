@@ -12,7 +12,8 @@ typedef struct {
   GtkSpinButton *price;
   // data
   const char *item_id;
-
+  ItemUpdateHandler update_handler;
+  gpointer update_handler_data;
 } WidgetState;
 
 // logic
@@ -59,8 +60,14 @@ static int update_item(const char *item_id, const char *title, double price) {
 
 static void handle_update(GtkWidget *_, gpointer state) {
   WidgetState *s = (WidgetState *)state;
-  update_item(s->item_id, gtk_editable_get_text(s->title),
-              gtk_spin_button_get_value_as_int(s->price));
+
+  const char *title = gtk_editable_get_text(s->title);
+  double price = gtk_spin_button_get_value_as_int(s->price);
+  int res = update_item(s->item_id, title, price);
+
+  if (res == 0 && s->update_handler != NULL) {
+    s->update_handler(title, price, s->update_handler_data);
+  }
 }
 
 static void handle_close(GtkWidget *_, gpointer state) {
@@ -72,7 +79,9 @@ static void handle_close(GtkWidget *_, gpointer state) {
 static void handle_destroy(GtkWidget *_, gpointer state) { g_free(state); }
 
 // UI
-GtkWidget *goods_update_component(const char *item_id, GtkWidget *parent) {
+GtkWidget *goods_update_component(ItemUpdateHandler update_handler,
+                                  const char *item_id, GtkWidget *parent,
+                                  gpointer update_handler_data) {
   Item current_item = read_item(item_id);
 
   GtkWidget *box_wrapper = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
@@ -113,8 +122,13 @@ GtkWidget *goods_update_component(const char *item_id, GtkWidget *parent) {
   // init state
 
   WidgetState *state = g_malloc(sizeof(WidgetState));
-  *state = (WidgetState){box_wrapper, parent, GTK_EDITABLE(title),
-                         GTK_SPIN_BUTTON(price_button), item_id};
+  *state = (WidgetState){box_wrapper,
+                         parent,
+                         GTK_EDITABLE(title),
+                         GTK_SPIN_BUTTON(price_button),
+                         item_id,
+                         update_handler,
+                         update_handler_data};
 
   // handle signals
 

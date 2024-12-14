@@ -23,6 +23,9 @@ typedef struct {
   GtkFrame *frame;
   // data
   const char *guest_id;
+  gpointer update_handler_data;
+  int update_handler_row_index;
+  GuestUpdateHandler update_handler;
   // state
   OrderArray *orders;
 } WidgetState;
@@ -77,7 +80,10 @@ static void handle_save(GtkWidget *_, gpointer state) {
   const char *passport = gtk_editable_get_text(GTK_EDITABLE(s->passport));
   const char *phone = gtk_editable_get_text(GTK_EDITABLE(s->phone));
 
-  update_guest(s->guest_id, name, passport, phone);
+  if (update_guest(s->guest_id, name, passport, phone) == 0 &&
+      s->update_handler != NULL) {
+    s->update_handler(name, passport, phone, s->update_handler_data);
+  }
 }
 
 static int check_out(const char *guest_id) {
@@ -329,7 +335,8 @@ static void render_orders(WidgetState *s) {
   }
 }
 
-static void handle_order_choose(const Item item, gpointer state) {
+static void handle_order_choose(GtkListBoxRow *_, const Item item,
+                                gpointer state) {
   WidgetState *s = (WidgetState *)state;
   // create order in db
   int order_id = create_order(s->guest_id, item.item_id, item.price);
@@ -341,7 +348,13 @@ static void handle_order_choose(const Item item, gpointer state) {
   order.title = g_strdup(item.title);
   order.sold_for = item.price;
   order.has_paid = false;
-  push_order_array(s->orders, order);
+  if (s->orders == NULL) {
+    s->orders = new_order_array(1);
+    s->orders->arr[0] = order;
+  } else {
+    push_order_array(s->orders, order);
+  }
+
   // render
   show_toast("Товар добавлен");
   gtk_list_box_append(GTK_LIST_BOX(s->list), new_order_list_item(order, s));
@@ -370,7 +383,9 @@ static void handle_destroy(GtkWidget *_, gpointer state) {
 
 // UI
 
-GtkWidget *guest_update_component(const char *guest_id, GtkWidget *parent) {
+GtkWidget *guest_update_component(const char *guest_id, GtkWidget *parent,
+                                  GuestUpdateHandler handle_update,
+                                  gpointer data) {
   // fetch guest's data
   Person *guest = get_guest(guest_id);
   g_assert(guest != NULL);
@@ -478,6 +493,8 @@ GtkWidget *guest_update_component(const char *guest_id, GtkWidget *parent) {
   state->parent = parent;
   state->guest_id = guest_id;
   state->orders = current_orders;
+  state->update_handler = handle_update;
+  state->update_handler_data = data;
 
   // render orders
 
