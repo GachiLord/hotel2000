@@ -79,8 +79,6 @@ BEGIN
   INSERT INTO guest_journal(guest_id, is_check_in) VALUES (guest_id, is_check_in);
 END;$$;
 
--- TODO: add read/analyze functions
-
 -- employees
  
 CREATE TABLE IF NOT EXISTS employees (
@@ -446,6 +444,32 @@ LANGUAGE PLPGSQL
 AS $$
 BEGIN
   DELETE FROM orders WHERE orders.order_id = delete_order.order_id;
+END;$$;
+
+-- reports
+
+CREATE OR REPLACE FUNCTION create_report (
+  start_date timestamp,
+  end_date timestamp
+)
+RETURNS SETOF JSON
+LANGUAGE PLPGSQL
+AS $$
+BEGIN
+  RETURN QUERY SELECT json_build_object(
+    'orders', (
+      SELECT json_agg(row_to_json( (SELECT r FROM (SELECT sold_for::money::numeric::float8, title, amount, created_at) r) )) 
+        FROM orders INNER JOIN goods ON orders.item_id = goods.item_id
+    ),
+    'check_ins', (
+      SELECT json_agg(guest_journal ORDER BY created_at) FROM guest_journal
+        WHERE is_check_in = true AND created_at >= start_date AND created_at <= end_date 
+      ),
+    'check_outs', (
+      SELECT json_agg(guest_journal ORDER BY created_at) FROM guest_journal 
+        WHERE is_check_in = false AND created_at >= start_date AND created_at <= end_date 
+      )
+  );
 END;$$;
 
 -- user mangement

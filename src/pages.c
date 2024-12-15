@@ -1,6 +1,7 @@
 #include "goods.h"
 #include "guests.h"
 #include "login.h"
+#include "report.h"
 #include "rooms.h"
 #include "user.h"
 #include <gtk/gtk.h>
@@ -34,6 +35,7 @@ GtkWidget *init_pages() {
   GtkWidget *goods_search = search_goods_page();
   GtkWidget *user_create = create_user_page();
   GtkWidget *read_users = read_users_page();
+  GtkWidget *report = report_page();
   gtk_stack_add_titled(GTK_STACK(main_stack), free_rooms, "free_rooms",
                        "Поиск номеров");
   gtk_stack_add_titled(GTK_STACK(main_stack), read_rooms, "read_rooms",
@@ -50,6 +52,8 @@ GtkWidget *init_pages() {
                        "Создание пользователей");
   gtk_stack_add_titled(GTK_STACK(main_stack), read_users, "read_users",
                        "Просмотр пользователей");
+  gtk_stack_add_titled(GTK_STACK(main_stack), report, "report",
+                       "Создать отчет");
   // bind switcher to main_stack and change the animation
   gtk_stack_switcher_set_stack(GTK_STACK_SWITCHER(switcher),
                                GTK_STACK(main_stack));

@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+<title>Отчет</title>
+
+<body>
+  <div>
+    <h3 id="check_out_count"></h3>
+    <h3 id="check_in_count"></h3>
+    <div style="height: 70vh; display: flex; justify-content: center;">
+      <canvas id="check_graph"></canvas>
+    </div>
+
+    <h3 id="orders_count"></h3>
+    <h3 id="orders_sum"></h3>
+    <div style="height: 80vh; display: flex; justify-content: center;">
+      <canvas id="orders_graph"></canvas>
+    </div>
+
+    <div style="height: 80vh; width: 80vh; margin: auto">
+      <canvas id="orders_segments"></canvas>
+    </div>
+  </div>
+  <style>
+    body {
+      margin: auto;
+      padding: 2rem;
+    }
+  </style>
+
+
+  <script>
+    // chart js library
+    %s
+  </script>
+
+  <script>
+    // display code
+    const report = JSON.parse(`%s`);
+
+    function groupByDate(arr) {
+      const labels = [];
+      const data = [];
+
+      arr.forEach(({created_at, amount}) => {
+        const d = new Date(created_at);
+        const l = labels.at(-1);
+
+        if (l === undefined || (l.getMonth() !== d.getMonth() || l.getYear() !== d.getYear())) {
+          labels.push(d);
+          data.push(1);
+        } else {
+          data[data.length - 1] += amount ?? 1;
+        }
+
+      });
+
+      return {labels: labels.map(item => item.toLocaleString(undefined, {month: "long"})), data}
+    }
+
+    // render check_in/out stats
+
+    {
+      const check_in_count = document.getElementById("check_in_count");
+      const check_out_count = document.getElementById("check_out_count");
+      check_out_count.textContent = `Всего заселений: ${report["check_ins"].length}`;
+      check_in_count.textContent = `Всего выселений: ${report["check_outs"].length}`;
+
+      const ctx = document.getElementById("check_graph");
+      const config_in = groupByDate(report["check_ins"]);
+      const config_out = groupByDate(report["check_outs"]);
+
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: config_out.labels.length > config_in.length ? config_out.labels : config_in.labels,
+          datasets: [{
+            label: 'Заселения',
+            data: config_in.data,
+            fill: false,
+            borderColor: 'rgb(75, 192, 192)',
+            tension: 0.1
+          },
+          {
+            label: 'Выселения',
+            data: config_out.data,
+            fill: false,
+            borderColor: 'rgb(100, 55, 192)',
+            tension: 0.1
+          }
+          ]
+        },
+      });
+    }
+
+    // render orders stats
+
+    {
+      const check_in_sum = document.getElementById("orders_sum");
+      const check_in_count = document.getElementById("orders_count");
+
+      check_in_count.textContent = `Всего заказов: ${report["orders"].length}`;
+      check_in_sum.textContent = `Всего заработано: ${report["orders"].reduce((acc, item) => acc + item.sold_for, 0)}`;
+
+      const ctx = document.getElementById('orders_graph');
+      const config_orders = groupByDate(report["orders"]);
+
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: config_orders.labels,
+          datasets: [{
+            label: 'Заказы',
+            data: config_orders.data,
+            fill: false,
+            borderColor: 'rgb(75, 192, 192)',
+            tension: 0.1
+          },
+          ]
+        },
+      });
+    }
+
+    // render orders segments
+
+    {
+      const ctx = document.getElementById('orders_segments');
+      const order_map = new Map();
+
+      report["orders"].forEach(({title, sold_for, amount}) => {
+        const entry = order_map.get(title);
+
+        if (entry === undefined) {
+          order_map.set(title, amount);
+        } else {
+          order_map.set(title, entry + amount);
+        }
+      });
+
+
+      const labels = order_map.keys();
+      const data = order_map.values();
+
+
+      new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: Array.from(labels),
+          datasets: [{
+            label: 'Распределение заказов',
+            data: Array.from(data),
+            fill: false,
+            tension: 0.1
+          },
+          ]
+        },
+      });
+    }
+
+
+  </script>
+
+</body>
+
+</html>
