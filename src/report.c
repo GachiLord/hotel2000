@@ -24,11 +24,18 @@ static Html get_report_html(char *report) {
 void handle_save_report(GObject *source_object, GAsyncResult *res,
                         gpointer report) {
 
-  if (source_object == NULL)
+  if (source_object == NULL) {
+    g_free(report);
     return;
+  }
 
   GFile *file =
       gtk_file_dialog_save_finish(GTK_FILE_DIALOG(source_object), res, NULL);
+
+  if (file == NULL) {
+    g_free(report);
+    return;
+  }
 
   Html html = get_report_html(report);
   bool success = g_file_replace_contents(file, html.html, html.len, NULL, false,

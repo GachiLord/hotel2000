@@ -41,14 +41,24 @@ static void handle_create(GtkWidget *_, gpointer __) {
 
   gchar *start_s = g_date_time_format_iso8601(start_d);
   gchar *end_s = g_date_time_format_iso8601(end_d);
+  gchar *s_d = g_date_time_format(start_d, "%m-%d-%y");
+  gchar *e_d = g_date_time_format(end_d, "%m-%d-%y");
 
   g_date_time_unref(start_d);
   g_date_time_unref(end_d);
 
   char *report_json = get_report(start_s, end_s);
 
+  // generate file name based on dates
+  char *file_name;
+  asprintf(&file_name, "Отчет %s-%s.html", s_d, e_d);
+  gtk_file_dialog_set_initial_name(state.dialog, file_name);
+
+  g_free(file_name);
   g_free(start_s);
   g_free(end_s);
+  g_free(s_d);
+  g_free(e_d);
 
   if (report_json != NULL) {
     gtk_file_dialog_save(state.dialog, APP_WINDOW, NULL, handle_save_report,
@@ -86,7 +96,6 @@ GtkWidget *report_page() {
   g_signal_connect(generate_button, "clicked", G_CALLBACK(handle_create), NULL);
 
   GtkFileDialog *dialog = gtk_file_dialog_new();
-  gtk_file_dialog_set_initial_name(dialog, "Отчет.html");
 
   state = (WidgetState){GTK_CALENDAR(start_calendar),
                         GTK_CALENDAR(end_calendar), GTK_FILE_DIALOG(dialog)};
