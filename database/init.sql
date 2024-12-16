@@ -18,7 +18,7 @@ AS $$
 DECLARE id integer;
 BEGIN
   INSERT INTO guests(name, passport, phone) VALUES (name, passport, phone) RETURNING guest_id INTO id;
-  INSERT INTO guest_journal(guest_id, is_check_in) VALUES (id, true);
+  INSERT INTO guest_journal(is_check_in) VALUES (true);
 END;$$;
 
 CREATE OR REPLACE FUNCTION find_guests (
@@ -76,7 +76,7 @@ CREATE OR REPLACE PROCEDURE create_journal_record (
 LANGUAGE PLPGSQL
 AS $$
 BEGIN
-  INSERT INTO guest_journal(guest_id, is_check_in) VALUES (guest_id, is_check_in);
+  INSERT INTO guest_journal(is_check_in) VALUES (is_check_in);
 END;$$;
 
 -- employees
@@ -293,7 +293,7 @@ CREATE OR REPLACE PROCEDURE check_out_guest (
 LANGUAGE PLPGSQL
 AS $$
 BEGIN
-  INSERT INTO guest_journal (guest_id, is_check_in) VALUES (id, false);
+  INSERT INTO guest_journal (is_check_in) VALUES (false);
   DELETE FROM guests WHERE guest_id = id;
 END;$$;
 
