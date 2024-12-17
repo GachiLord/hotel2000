@@ -4,7 +4,7 @@
 
 // logic
 
-typedef enum { VIEWER, HOSTESS, MANAGER } PersmissionLevel;
+typedef enum { VIEWER, HOSTESS, MANAGER } PermissionLevel;
 
 typedef struct {
   char *login;

@@ -79,68 +79,6 @@ BEGIN
   INSERT INTO guest_journal(is_check_in) VALUES (is_check_in);
 END;$$;
 
--- employees
- 
-CREATE TABLE IF NOT EXISTS employees (
-  employee_id SERIAL PRIMARY KEY,
-  name varchar(50) NOT NULL,
-  passport varchar(30) NOT NULL,
-  phone varchar(30) NOT NULL
-);
-
-
-CREATE OR REPLACE PROCEDURE create_employee (
-  name varchar(50),
-  passport varchar(30),
-  phone varchar(30)
-)
-LANGUAGE PLPGSQL
-AS $$
-BEGIN
-  INSERT INTO employees(name, passport, phone) VALUES (name, passport, phone);
-END;$$;
-
-CREATE OR REPLACE FUNCTION find_employees (
-  name varchar(50)
-)
-RETURNS SETOF employees
-LANGUAGE PLPGSQL
-AS $$
-BEGIN
-  RETURN QUERY SELECT * FROM employees WHERE name ILIKE '%' || name || '%';
-END;$$;
-
-CREATE OR REPLACE FUNCTION read_employee (
-  employee_id int
-)
-RETURNS SETOF employees
-LANGUAGE PLPGSQL
-AS $$
-BEGIN
-  RETURN QUERY SELECT * FROM employees WHERE employee_id = employee_id;
-END;$$;
-
-CREATE OR REPLACE PROCEDURE update_employee (
-  employee_id int,
-  name varchar(50),
-  passport varchar(30),
-  phone varchar(30)
-)
-LANGUAGE PLPGSQL
-AS $$
-BEGIN
-  UPDATE employees SET name = name, passport = passport, phone = phone WHERE employee_id = employee_id;
-END;$$;
-
-CREATE OR REPLACE PROCEDURE delete_employee (
-  employee_id int
-)
-LANGUAGE PLPGSQL
-AS $$
-BEGIN
-  DELETE FROM employees WHERE employee_id = employee_id;
-END;$$;
-
 
 -- rooms
 
@@ -157,89 +95,6 @@ LANGUAGE PLPGSQL
 AS $$
 BEGIN
   RETURN QUERY SELECT * FROM rooms OFFSET ((SELECT * FROM GREATEST(0, page - 1)) * 20) LIMIT 20;
-END;$$;
-
--- keys
-
-CREATE TABLE IF NOT EXISTS keys (
-  key_id SERIAL PRIMARY KEY,
-  secret bytea NOT NULL
-);
-
-
-CREATE OR REPLACE PROCEDURE create_key(
-  key_id int,
-  secret bytea
-)
-LANGUAGE PLPGSQL
-AS $$
-BEGIN
-  INSERT INTO keys(key_id, secret) VALUES(key_id, secret);
-END;$$;
-
-CREATE OR REPLACE PROCEDURE delete_key(
-  key_id int
-)
-LANGUAGE PLPGSQL
-AS $$
-BEGIN
-  DELETE FROM keys WHERE key_id = key_id;
-END;$$;
-
--- rooms-keys
-
-CREATE TABLE IF NOT EXISTS rooms_keys (
-  room_id integer NOT NULL,
-  key_id integer NOT NULL,
-  FOREIGN KEY(room_id) REFERENCES rooms(room_id) ON DELETE CASCADE,
-  FOREIGN KEY(key_id) REFERENCES keys(key_id) ON DELETE CASCADE
-);
-
-CREATE OR REPLACE PROCEDURE assign_key(
-  key_id int,
-  room_id int
-)
-LANGUAGE PLPGSQL
-AS $$
-BEGIN
-  INSERT INTO rooms_keys(key_id, room_id) VALUES(key_id, room_id);
-END;$$;
-
-CREATE OR REPLACE PROCEDURE revoke_key(
-  key_id integer
-)
-LANGUAGE PLPGSQL
-AS $$
-BEGIN
-  DELETE FROM rooms_keys WHERE key_id = key_id;
-END;$$;
-
--- employees-keys
-
-CREATE TABLE IF NOT EXISTS employees_keys (
-  employee_id integer NOT NULL,
-  key_id integer NOT NULL,
-  FOREIGN KEY(employee_id) REFERENCES employees(employee_id) ON DELETE CASCADE,
-  FOREIGN KEY(key_id) REFERENCES keys(key_id) ON DELETE CASCADE
-);
-
-CREATE OR REPLACE PROCEDURE assign_employee_key(
-  key_id int,
-  employee_id int
-)
-LANGUAGE PLPGSQL
-AS $$
-BEGIN
-  INSERT INTO employees_keys(key_id, employee_id) VALUES(key_id, employee_id);
-END;$$;
-
-CREATE OR REPLACE PROCEDURE revoke_employee_key(
-  key_id int
-)
-LANGUAGE PLPGSQL
-AS $$
-BEGIN
-  DELETE FROM employees_keys WHERE key_id = key_id;
 END;$$;
 
 -- rooms-guests
@@ -297,7 +152,7 @@ BEGIN
   DELETE FROM guests WHERE guest_id = id;
 END;$$;
 
--- pricing
+-- goods
 
 CREATE TABLE IF NOT EXISTS goods (
   item_id SERIAL PRIMARY KEY,
@@ -460,6 +315,7 @@ BEGIN
     'orders', (
       SELECT json_agg(row_to_json( (SELECT r FROM (SELECT sold_for::money::numeric::float8, title, amount, created_at) r) )) 
         FROM orders INNER JOIN goods ON orders.item_id = goods.item_id
+        WHERE created_at >= start_date AND created_at <= end_date
     ),
     'check_ins', (
       SELECT json_agg(guest_journal ORDER BY created_at) FROM guest_journal
@@ -494,7 +350,7 @@ BEGIN
   END IF;
   IF permission_level = 2 THEN
     EXECUTE FORMAT(
-      'CREATE USER %s WITH PASSWORD %L IN ROLE manager', login, password
+      'CREATE USER %s WITH CREATEROLE PASSWORD %L IN ROLE manager', login, password
     );
   END IF;
 END;$$;
@@ -520,41 +376,48 @@ BEGIN
   );
 END;$$;
 
+CREATE OR REPLACE FUNCTION get_permission_level()
+RETURNS int
+LANGUAGE PLPGSQL
+AS $$
+BEGIN
+  IF pg_has_role('manager', 'MEMBER') = true THEN
+    RETURN 2;
+  END IF;
+  IF pg_has_role('hostess', 'MEMBER') = true THEN
+    RETURN 1;
+  END IF;
+  IF pg_has_role('viewer', 'MEMBER') = true THEN
+    RETURN 0;
+  END IF;
+END;$$;
+
 -- permissions 
 
 GRANT SELECT ON TABLE guests TO viewer;
-GRANT SELECT ON TABLE pricing TO viewer;
-
-GRANT EXECUTE ON FUNCTION find_guests TO viewer;
-GRANT EXECUTE ON FUNCTION read_guest TO viewer;
-GRANT EXECUTE ON FUNCTION read_items_by_page TO viewer;
+GRANT SELECT ON TABLE goods TO viewer;
+GRANT SELECT ON TABLE rooms TO viewer;
+GRANT SELECT ON TABLE rooms_guests TO viewer;
+GRANT SELECT ON TABLE orders TO viewer;
+GRANT SELECT ON TABLE guest_journal TO viewer;
 
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE guests TO hostess;
-GRANT SELECT ON TABLE employees TO hostess;
 GRANT SELECT ON TABLE rooms TO hostess;
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE rooms_guests TO hostess;
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE orders TO hostess;
+GRANT USAGE, SELECT ON SEQUENCE orders_order_id_seq TO hostess;
+GRANT SELECT ON TABLE goods TO hostess;
 GRANT SELECT, INSERT ON TABLE guest_journal TO hostess;
-
-GRANT EXECUTE ON PROCEDURE create_guest TO hostess;
-GRANT EXECUTE ON FUNCTION find_guests TO hostess;
-GRANT EXECUTE ON FUNCTION read_guest TO hostess;
-GRANT EXECUTE ON PROCEDURE update_guest TO hostess;
-GRANT EXECUTE ON PROCEDURE delete_guest TO hostess;
-GRANT EXECUTE ON PROCEDURE create_journal_record TO hostess;
-GRANT EXECUTE ON FUNCTION find_employees TO hostess;
-GRANT EXECUTE ON FUNCTION read_employee TO hostess;
-GRANT EXECUTE ON PROCEDURE create_key TO hostess;
-GRANT EXECUTE ON PROCEDURE delete_key TO hostess;
-GRANT EXECUTE ON PROCEDURE assign_key TO hostess;
-GRANT EXECUTE ON PROCEDURE revoke_key TO hostess;
-GRANT EXECUTE ON FUNCTION find_free_rooms(occupancy int) TO hostess;
-GRANT EXECUTE ON PROCEDURE check_in_guest TO hostess;
-GRANT EXECUTE ON PROCEDURE check_out_guests TO hostess;
-GRANT EXECUTE ON PROCEDURE create_order TO hostess;
-GRANT EXECUTE ON FUNCTION read_guest_orders TO hostess;
-GRANT EXECUTE ON PROCEDURE pay_order TO hostess;
+GRANT USAGE, SELECT ON SEQUENCE guests_guest_id_seq TO hostess;
 
 
-GRANT ALL PRIVILEGES ON DATABASE hotel2000 TO manager;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE guests TO manager;
+GRANT SELECT ON TABLE rooms TO manager;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE rooms_guests TO manager;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE orders TO manager;
+GRANT USAGE, SELECT ON SEQUENCE orders_order_id_seq TO manager;
+GRANT SELECT, INSERT, UPDATE ON TABLE goods TO manager;
+GRANT USAGE, SELECT ON SEQUENCE goods_item_id_seq TO manager;
+GRANT SELECT, INSERT ON TABLE guest_journal TO manager;
+GRANT USAGE, SELECT ON SEQUENCE guests_guest_id_seq TO manager;

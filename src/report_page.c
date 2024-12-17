@@ -41,8 +41,8 @@ static void handle_create(GtkWidget *_, gpointer __) {
 
   gchar *start_s = g_date_time_format_iso8601(start_d);
   gchar *end_s = g_date_time_format_iso8601(end_d);
-  gchar *s_d = g_date_time_format(start_d, "%m-%d-%y");
-  gchar *e_d = g_date_time_format(end_d, "%m-%d-%y");
+  gchar *s_d = g_date_time_format(start_d, "%m.%d.%y");
+  gchar *e_d = g_date_time_format(end_d, "%m.%d.%y");
 
   g_date_time_unref(start_d);
   g_date_time_unref(end_d);

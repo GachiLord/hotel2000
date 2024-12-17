@@ -9,6 +9,7 @@
 extern DbState *DB_STATE;
 extern GtkWindow *APP_WINDOW;
 extern GtkStack *APP_STACK;
+extern GtkStack *MAIN_STACK;
 extern GtkOverlay *APP_OVERLAY;
 extern GtkWidget *HOME_WIDGET;
 

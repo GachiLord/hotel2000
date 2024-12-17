@@ -4,6 +4,7 @@
 #include "goods.h"
 #include "gtk/gtkshortcut.h"
 #include "guests.h"
+#include "user.h"
 #include <gtk/gtk.h>
 #include <libpq-fe.h>
 #include <stdio.h>
@@ -275,6 +276,7 @@ static GtkWidget *new_order_list_item(Order order, WidgetState *s) {
   GtkAdjustment *price_adjustment =
       gtk_adjustment_new(order.sold_for, 0.0, 100000.0, 1.0, 5.0, 0.0);
   GtkWidget *price_button = gtk_spin_button_new(price_adjustment, 1.0, 0);
+  gtk_widget_set_sensitive(price_button, DB_STATE->permission_level > VIEWER);
   gtk_widget_set_margin_start(price_button, 10);
   gtk_widget_set_margin_top(price_button, 10);
   gtk_grid_attach_next_to(GTK_GRID(item), price_button, price, GTK_POS_RIGHT, 1,
@@ -289,12 +291,15 @@ static GtkWidget *new_order_list_item(Order order, WidgetState *s) {
   GtkAdjustment *amount_adjustment =
       gtk_adjustment_new(order.amount, 1.0, 100000.0, 1.0, 5.0, 0.0);
   GtkWidget *amount_button = gtk_spin_button_new(amount_adjustment, 1.0, 0);
+  gtk_widget_set_sensitive(amount_button, DB_STATE->permission_level > VIEWER);
   gtk_widget_set_margin_start(amount_button, 10);
   gtk_widget_set_margin_top(amount_button, 10);
   gtk_grid_attach_next_to(GTK_GRID(item), amount_button, amount, GTK_POS_RIGHT,
                           1, 1);
 
   GtkWidget *has_paid_button = gtk_check_button_new_with_label("Оплачено");
+  gtk_widget_set_sensitive(has_paid_button,
+                           DB_STATE->permission_level > VIEWER);
   gtk_check_button_set_active(GTK_CHECK_BUTTON(has_paid_button),
                               order.has_paid);
   gtk_widget_set_margin_start(has_paid_button, 10);
@@ -302,20 +307,22 @@ static GtkWidget *new_order_list_item(Order order, WidgetState *s) {
   gtk_grid_attach_next_to(GTK_GRID(item), has_paid_button, amount_button,
                           GTK_POS_RIGHT, 1, 1);
 
-  GtkWidget *save_button = gtk_button_new_with_label("Сохранить");
-  gtk_widget_set_margin_start(save_button, 10);
-  gtk_widget_set_margin_top(save_button, 10);
-  gtk_grid_attach_next_to(GTK_GRID(item), save_button, has_paid_button,
-                          GTK_POS_RIGHT, 1, 1);
-  g_signal_connect(save_button, "clicked", G_CALLBACK(handle_item_save), s);
+  if (DB_STATE->permission_level > VIEWER) {
+    GtkWidget *save_button = gtk_button_new_with_label("Сохранить");
+    gtk_widget_set_margin_start(save_button, 10);
+    gtk_widget_set_margin_top(save_button, 10);
+    gtk_grid_attach_next_to(GTK_GRID(item), save_button, has_paid_button,
+                            GTK_POS_RIGHT, 1, 1);
+    g_signal_connect(save_button, "clicked", G_CALLBACK(handle_item_save), s);
 
-  GtkWidget *delete_button = gtk_button_new_with_label("Удалить");
-  gtk_widget_set_margin_start(delete_button, 10);
-  gtk_widget_set_margin_top(delete_button, 10);
-  gtk_grid_attach_next_to(GTK_GRID(item), delete_button, save_button,
-                          GTK_POS_RIGHT, 1, 1);
-  g_signal_connect(delete_button, "clicked", G_CALLBACK(handle_item_delete), s);
-
+    GtkWidget *delete_button = gtk_button_new_with_label("Удалить");
+    gtk_widget_set_margin_start(delete_button, 10);
+    gtk_widget_set_margin_top(delete_button, 10);
+    gtk_grid_attach_next_to(GTK_GRID(item), delete_button, save_button,
+                            GTK_POS_RIGHT, 1, 1);
+    g_signal_connect(delete_button, "clicked", G_CALLBACK(handle_item_delete),
+                     s);
+  }
   return item;
 }
 
@@ -415,6 +422,7 @@ GtkWidget *guest_update_component(const char *guest_id, GtkWidget *parent,
   gtk_entry_set_placeholder_text(GTK_ENTRY(name), "Имя");
   gtk_entry_buffer_set_text(gtk_entry_get_buffer(GTK_ENTRY(name)), guest->name,
                             -1);
+  gtk_widget_set_sensitive(name, DB_STATE->permission_level > VIEWER);
 
   gtk_widget_set_size_request(name, -1, 40);
   gtk_box_append(GTK_BOX(user_box), name);
@@ -425,12 +433,14 @@ GtkWidget *guest_update_component(const char *guest_id, GtkWidget *parent,
                             guest->phone, -1);
   gtk_widget_set_size_request(phone, -1, 40);
   gtk_box_append(GTK_BOX(user_box), phone);
+  gtk_widget_set_sensitive(phone, DB_STATE->permission_level > VIEWER);
 
   GtkWidget *passport = gtk_entry_new();
   gtk_entry_set_placeholder_text(GTK_ENTRY(passport), "Паспорт");
   gtk_entry_buffer_set_text(gtk_entry_get_buffer(GTK_ENTRY(passport)),
                             guest->passport, -1);
   gtk_widget_set_size_request(passport, -1, 40);
+  gtk_widget_set_sensitive(passport, DB_STATE->permission_level > VIEWER);
   gtk_box_append(GTK_BOX(user_box), passport);
 
   // free guest cause no longer needed
@@ -451,7 +461,8 @@ GtkWidget *guest_update_component(const char *guest_id, GtkWidget *parent,
   gtk_widget_set_valign(checkout_button, GTK_ALIGN_START);
   gtk_box_append(GTK_BOX(user_action_box), checkout_button);
 
-  gtk_box_append(GTK_BOX(user_box), user_action_box);
+  if (DB_STATE->permission_level > VIEWER)
+    gtk_box_append(GTK_BOX(user_box), user_action_box);
 
   // orders editor
   GtkWidget *order_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
@@ -473,7 +484,9 @@ GtkWidget *guest_update_component(const char *guest_id, GtkWidget *parent,
   gtk_widget_set_size_request(add_order_button, -1, 40);
   gtk_widget_set_halign(add_order_button, GTK_ALIGN_CENTER);
   gtk_widget_set_valign(add_order_button, GTK_ALIGN_START);
-  gtk_box_append(GTK_BOX(order_box), add_order_button);
+
+  if (DB_STATE->permission_level > VIEWER)
+    gtk_box_append(GTK_BOX(order_box), add_order_button);
 
   // close button
 

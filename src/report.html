@@ -30,12 +30,16 @@
 
   <script>
     // chart js library
-    %s
+    % s
   </script>
 
   <script>
     // display code
     const report = JSON.parse(`%s`);
+
+    report["check_ins"] = report["check_ins"] ?? [];
+    report["check_outs"] = report["check_outs"] ?? [];
+    report["orders"] = report["orders"] ?? [];
 
     function groupByDate(arr) {
       const labels = [];

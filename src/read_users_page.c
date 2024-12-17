@@ -49,7 +49,7 @@ static int delete_user(const char *login) {
   PGresult *res = PQexec(DB_STATE->conn, query);
   g_free(query);
 
-  if (handle_db_error(res, "Не удалось выполнить запрос") != 0) {
+  if (handle_db_error(res, "Недостаточно прав для удаления") != 0) {
     return -1;
   }
   PQclear(res);
@@ -86,7 +86,8 @@ static void render_items(WidgetState *s) {
 
     GtkWidget *delete_button = gtk_button_new_with_label("Удалить");
     gtk_widget_set_margin_end(title, 10);
-    gtk_center_box_set_end_widget(GTK_CENTER_BOX(item), delete_button);
+    if (DB_STATE->permission_level >= MANAGER)
+      gtk_center_box_set_end_widget(GTK_CENTER_BOX(item), delete_button);
     g_signal_connect(delete_button, "clicked", G_CALLBACK(handle_delete),
                      GINT_TO_POINTER(i));
 

@@ -250,7 +250,9 @@ GtkWidget *room_update_component(const char *room_id, const char *occupancy,
   gtk_box_append(GTK_BOX(buttons_box), button_remove);
   gtk_widget_set_halign(buttons_box, GTK_ALIGN_CENTER);
 
-  gtk_box_append(GTK_BOX(box), buttons_box);
+  if (DB_STATE->permission_level > VIEWER) {
+    gtk_box_append(GTK_BOX(box), buttons_box);
+  }
 
   // handle signals
 

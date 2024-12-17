@@ -1,9 +1,13 @@
 #include "common.h"
 #include "database.h"
+#include "pages.h"
 #include <gtk/gtk.h>
 
 static void login_handler(GtkWidget *widget, gpointer data) {
   if (db_connect() == 0) {
+    // set pages on MAIN_STACK
+    set_pages_according_to_permission_level();
+    // show home
     gtk_stack_set_visible_child_name(APP_STACK, "home");
     g_print("connected to db %s\n", DB_STATE->database);
     show_toast("Вход в систему");

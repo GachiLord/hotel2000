@@ -1,3 +1,4 @@
+#include "common.h"
 #include "goods.h"
 #include "guests.h"
 #include "login.h"
@@ -8,8 +9,45 @@
 
 // define app pages
 GtkWidget *HOME_WIDGET;
+GtkStack *MAIN_STACK;
 // init
 
+/// should only be called after init_pages()
+void set_pages_according_to_permission_level() {
+
+  gtk_stack_add_titled(GTK_STACK(MAIN_STACK), free_rooms_page(), "free_rooms",
+                       "Поиск номеров");
+
+  gtk_stack_add_titled(GTK_STACK(MAIN_STACK), read_rooms_page(), "read_rooms",
+                       "Просмотр номеров");
+
+  gtk_stack_add_titled(GTK_STACK(MAIN_STACK), search_guests_page(),
+                       "search_guests", "Поиск гостей");
+
+  if (DB_STATE->permission_level >= HOSTESS) {
+    gtk_stack_add_titled(GTK_STACK(MAIN_STACK), create_guests_page(),
+                         "create_guests", "Регистрация гостей");
+  }
+
+  gtk_stack_add_titled(GTK_STACK(MAIN_STACK), search_goods_page(),
+                       "search_goods", "Поиск товаров");
+
+  if (DB_STATE->permission_level >= MANAGER) {
+    gtk_stack_add_titled(GTK_STACK(MAIN_STACK), create_goods_page(),
+                         "create_goods", "Создание товаров");
+
+    gtk_stack_add_titled(GTK_STACK(MAIN_STACK), create_user_page(),
+                         "create_users", "Создание пользователей");
+  }
+
+  gtk_stack_add_titled(GTK_STACK(MAIN_STACK), read_users_page(), "read_users",
+                       "Просмотр пользователей");
+
+  gtk_stack_add_titled(GTK_STACK(MAIN_STACK), report_page(), "report",
+                       "Создать отчет");
+}
+
+/// this function should be called on the app startup
 GtkWidget *init_pages() {
   GtkWidget *stack = gtk_stack_new();
   gtk_stack_set_transition_type(GTK_STACK(stack),
@@ -26,34 +64,10 @@ GtkWidget *init_pages() {
 
   GtkWidget *switcher = gtk_stack_switcher_new();
   GtkWidget *main_stack = gtk_stack_new();
-  // pages
-  GtkWidget *free_rooms = free_rooms_page();
-  GtkWidget *read_rooms = read_rooms_page();
-  GtkWidget *guest_create = create_guests_page();
-  GtkWidget *guest_search = search_guests_page();
-  GtkWidget *goods_create = create_goods_page();
-  GtkWidget *goods_search = search_goods_page();
-  GtkWidget *user_create = create_user_page();
-  GtkWidget *read_users = read_users_page();
-  GtkWidget *report = report_page();
-  gtk_stack_add_titled(GTK_STACK(main_stack), free_rooms, "free_rooms",
-                       "Поиск номеров");
-  gtk_stack_add_titled(GTK_STACK(main_stack), read_rooms, "read_rooms",
-                       "Просмотр номеров");
-  gtk_stack_add_titled(GTK_STACK(main_stack), guest_create, "create_guests",
-                       "Регистрация гостей");
-  gtk_stack_add_titled(GTK_STACK(main_stack), guest_search, "search_guests",
-                       "Поиск гостей");
-  gtk_stack_add_titled(GTK_STACK(main_stack), goods_create, "create_goods",
-                       "Создание товаров");
-  gtk_stack_add_titled(GTK_STACK(main_stack), goods_search, "search_goods",
-                       "Поиск товаров");
-  gtk_stack_add_titled(GTK_STACK(main_stack), user_create, "create_users",
-                       "Создание пользователей");
-  gtk_stack_add_titled(GTK_STACK(main_stack), read_users, "read_users",
-                       "Просмотр пользователей");
-  gtk_stack_add_titled(GTK_STACK(main_stack), report, "report",
-                       "Создать отчет");
+
+  // set global main_stack var to be able to manupulate pages
+  MAIN_STACK = GTK_STACK(main_stack);
+
   // bind switcher to main_stack and change the animation
   gtk_stack_switcher_set_stack(GTK_STACK_SWITCHER(switcher),
                                GTK_STACK(main_stack));

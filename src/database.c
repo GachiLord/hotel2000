@@ -1,5 +1,7 @@
 #include "database.h"
+#include "common.h"
 #include "glib.h"
+#include "user.h"
 #include <glib/gprintf.h>
 #include <libpq-fe.h>
 
@@ -25,12 +27,28 @@ static void exit_nicely() {
 void init_db_state() {
   // pass initial values TODO: use persisted values
   DB_STATE = g_malloc(sizeof(DbState));
+  DB_STATE->permission_level = VIEWER;
   DB_STATE->conn = NULL;
   DB_STATE->user = g_strdup("postgres");
   DB_STATE->password = g_strdup("root");
   DB_STATE->port = g_strdup("5432");
   DB_STATE->host = g_strdup("localhost");
   DB_STATE->database = g_strdup("hotel2000");
+}
+
+PermissionLevel get_permission_level() {
+  PGresult *res =
+      PQexec(DB_STATE->conn, "SELECT * FROM get_permission_level()");
+
+  if (handle_db_error(res, "Не удалось получить роль пользователя") != 0) {
+    g_printerr(
+        "Cannot get permission_level from db, act like user has MANAGER role");
+    return 2;
+  }
+
+  PermissionLevel level = atoi(PQgetvalue(res, 0, 0));
+  PQclear(res);
+  return level;
 }
 
 int db_connect() {
@@ -52,5 +70,7 @@ int db_connect() {
     g_printerr("%s", PQerrorMessage(DB_STATE->conn));
     return 1;
   }
+  // update UI according permission_level
+  DB_STATE->permission_level = get_permission_level();
   return 0;
 }

@@ -1,8 +1,10 @@
+#include "user.h"
 #include <libpq-fe.h>
 
 #pragma once
 
 typedef struct {
+  PermissionLevel permission_level;
   PGconn *conn;
   char *user;
   char *password;

@@ -4,7 +4,7 @@
 
 // logic
 
-static int create_user(const char *login, PersmissionLevel role,
+static int create_user(const char *login, PermissionLevel role,
                        const char *password) {
   char *query;
   asprintf(&query, "call create_user ('%s', '%s', %d)", login, password, role);
@@ -40,11 +40,11 @@ static void create_handler(GtkWidget *_, gpointer __) {
 
   const char *name = gtk_editable_get_text(GTK_EDITABLE(state.name));
   const char *passport = gtk_editable_get_text(GTK_EDITABLE(state.passport));
-  PersmissionLevel level = VIEWER;
+  PermissionLevel level = VIEWER;
 
   if (gtk_check_button_get_active(state.hostess))
     level = HOSTESS;
-  else
+  else if (gtk_check_button_get_active(state.manager))
     level = MANAGER;
 
   if (create_user(name, level, passport) == 0) {

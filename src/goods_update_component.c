@@ -28,7 +28,6 @@ static Item read_item(const char *item_id) {
   if (handle_db_error(res, "Не удалось выполнить запрос") != 0) {
     return (Item){};
   }
-  show_toast("Изменения сохранены");
 
   char *id = g_strdup(PQgetvalue(res, 0, 0));
   char *title = g_strdup(PQgetvalue(res, 0, 1));
@@ -100,6 +99,7 @@ GtkWidget *goods_update_component(ItemUpdateHandler update_handler,
   gtk_box_prepend(GTK_BOX(box_wrapper), close_button);
 
   GtkWidget *title = gtk_entry_new();
+  gtk_widget_set_sensitive(title, DB_STATE->permission_level >= MANAGER);
   gtk_entry_set_placeholder_text(GTK_ENTRY(title), "Название товара");
   gtk_widget_set_size_request(title, -1, 40);
   gtk_entry_buffer_set_text(gtk_entry_get_buffer(GTK_ENTRY(title)),
@@ -109,13 +109,16 @@ GtkWidget *goods_update_component(ItemUpdateHandler update_handler,
   GtkAdjustment *adjustment =
       gtk_adjustment_new(current_item.price, 0.0, 100000.0, 1.0, 5.0, 0.0);
   GtkWidget *price_button = gtk_spin_button_new(adjustment, 1.0, 0);
+  gtk_widget_set_sensitive(price_button, DB_STATE->permission_level >= MANAGER);
   gtk_box_append(GTK_BOX(box), price_button);
 
   GtkWidget *save_button = gtk_button_new_with_label("Сохранить");
   gtk_widget_set_size_request(save_button, -1, 40);
   gtk_widget_set_halign(save_button, GTK_ALIGN_CENTER);
   gtk_widget_set_valign(save_button, GTK_ALIGN_START);
-  gtk_box_append(GTK_BOX(box), save_button);
+
+  if (DB_STATE->permission_level >= MANAGER)
+    gtk_box_append(GTK_BOX(box), save_button);
 
   // free item cause no longer needed
   free_item_fields(&current_item);
