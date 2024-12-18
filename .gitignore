@@ -5,3 +5,8 @@ hotel2000
 *.gch
 *.o
 *.out
+*~
+*.swp
+*.obj
+*.exe
+build
