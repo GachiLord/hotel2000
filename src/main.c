@@ -1,3 +1,4 @@
+#include "asprintf.h" // this muts be included before stdio
 #include "database.h"
 #include "pages.h"
 #include <gtk/gtk.h>
