@@ -41,5 +41,10 @@ static void handle_item_click(GtkListBoxRow *row, Person guest, gpointer __) {
 // UI
 
 GtkWidget *search_guests_page() {
-  return search_guests_component(handle_item_click, NULL, false, HOME_WIDGET);
+  GtkWidget *box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+  gtk_widget_set_margin_top(box, DEFAULT_MARGIN_TOP);
+  gtk_box_append(GTK_BOX(box), search_guests_component(handle_item_click, NULL,
+                                                       false, HOME_WIDGET));
+
+  return box;
 }

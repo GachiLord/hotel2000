@@ -13,6 +13,9 @@ extern GtkStack *MAIN_STACK;
 extern GtkOverlay *APP_OVERLAY;
 extern GtkWidget *HOME_WIDGET;
 
+#define DEFAULT_MARGIN_TOP 50
+#define COMPONENT_MARGIN_TOP 10
+
 // ui
 
 void remove_widget_from_main_stack(GtkWidget *widget, GtkWidget *parent);

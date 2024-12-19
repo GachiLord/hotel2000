@@ -98,7 +98,7 @@ GtkWidget *search_guests_component(GuestClickHandler on_item_click,
   GtkWidget *box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
   GtkWidget *list = gtk_list_box_new();
   GtkWidget *frame = gtk_frame_new(NULL);
-  gtk_widget_set_margin_top(box, 10);
+  gtk_widget_set_margin_top(box, COMPONENT_MARGIN_TOP);
   gtk_widget_set_visible(frame, false);
   gtk_frame_set_child(GTK_FRAME(frame), list);
   gtk_widget_set_halign(frame, GTK_ALIGN_CENTER);
@@ -116,7 +116,7 @@ GtkWidget *search_guests_component(GuestClickHandler on_item_click,
   GtkWidget *search = gtk_search_entry_new();
   gtk_box_prepend(GTK_BOX(box), search);
   gtk_widget_set_halign(search, GTK_ALIGN_CENTER);
-  gtk_widget_set_size_request(search, 300, 40);
+  gtk_widget_set_size_request(search, GUESTS_DEFAULT_WIDTH, 40);
 
   // handle search
   g_signal_connect(search, "activate", G_CALLBACK(handle_search), state);

@@ -93,7 +93,7 @@ GtkWidget *read_rooms_page() {
   GtkWidget *frame = gtk_frame_new(NULL);
   gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scroll), list);
   gtk_widget_set_size_request(scroll, 600, 900);
-  gtk_widget_set_margin_top(box, 50);
+  gtk_widget_set_margin_top(box, DEFAULT_MARGIN_TOP);
   gtk_widget_set_visible(frame, false);
   gtk_frame_set_child(GTK_FRAME(frame), scroll);
   gtk_widget_set_halign(frame, GTK_ALIGN_CENTER);

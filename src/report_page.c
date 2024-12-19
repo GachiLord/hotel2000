@@ -70,7 +70,7 @@ static void handle_create(GtkWidget *_, gpointer __) {
 
 GtkWidget *report_page() {
   GtkWidget *box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
-  gtk_widget_set_margin_top(box, 50);
+  gtk_widget_set_margin_top(box, DEFAULT_MARGIN_TOP);
   gtk_widget_set_halign(box, GTK_ALIGN_CENTER);
   gtk_widget_set_valign(box, GTK_ALIGN_CENTER);
 

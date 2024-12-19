@@ -39,6 +39,8 @@ GtkWidget *guest_update_component(const char *guest_id, GtkWidget *parent,
                                   GuestUpdateHandler update_handler,
                                   gpointer data);
 
+#define GUESTS_DEFAULT_WIDTH 800
+
 void render_guests_to_list(GtkListBox *list, GtkFrame *frame,
                            const PersonArray *guests,
                            bool remove_children_on_update);

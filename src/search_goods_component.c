@@ -134,7 +134,7 @@ GtkWidget *search_goods_component(ItemClickHandler on_item_click, gpointer data,
   GtkWidget *box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
   GtkWidget *list = gtk_list_box_new();
   GtkWidget *frame = gtk_frame_new(NULL);
-  gtk_widget_set_margin_top(box, 50);
+  gtk_widget_set_margin_top(box, COMPONENT_MARGIN_TOP);
   gtk_widget_set_visible(frame, false);
   gtk_frame_set_child(GTK_FRAME(frame), list);
   gtk_widget_set_halign(frame, GTK_ALIGN_CENTER);

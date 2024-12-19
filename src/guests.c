@@ -118,7 +118,7 @@ void render_guests_to_list(GtkListBox *list, GtkFrame *frame,
     gtk_widget_set_margin_end(l3, 20);
     gtk_center_box_set_end_widget(GTK_CENTER_BOX(item), l3);
 
-    gtk_widget_set_size_request(item, 800, 50);
+    gtk_widget_set_size_request(item, GUESTS_DEFAULT_WIDTH, 50);
     gtk_widget_set_halign(item, GTK_ALIGN_CENTER);
     gtk_list_box_append(GTK_LIST_BOX(list), item);
   }

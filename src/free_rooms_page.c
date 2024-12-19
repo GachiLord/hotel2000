@@ -96,7 +96,7 @@ GtkWidget *free_rooms_page() {
   // wrapper
   GtkWidget *wrap = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
   gtk_widget_set_halign(wrap, GTK_ALIGN_CENTER);
-  gtk_widget_set_margin_top(wrap, 20);
+  gtk_widget_set_margin_top(wrap, DEFAULT_MARGIN_TOP);
   gtk_box_prepend(GTK_BOX(box), wrap);
   // spin button
   GtkAdjustment *adjustment =
