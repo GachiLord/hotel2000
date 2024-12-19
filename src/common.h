@@ -19,4 +19,4 @@ void remove_widget_from_main_stack(GtkWidget *widget, GtkWidget *parent);
 void add_widget_to_main_stack(GtkWidget *widget);
 
 void show_toast(const char *text);
-int handle_db_error(PGresult *res, const char *const err_msg);
+bool handle_db_error(PGresult *res, const char *const err_msg);

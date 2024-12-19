@@ -40,7 +40,7 @@ PermissionLevel get_permission_level() {
   PGresult *res =
       PQexec(DB_STATE->conn, "SELECT * FROM get_permission_level()");
 
-  if (handle_db_error(res, "Не удалось получить роль пользователя") != 0) {
+  if (handle_db_error(res, "Не удалось получить роль пользователя") == false) {
     g_printerr(
         "Cannot get permission_level from db, act like user has MANAGER role");
     return 2;
@@ -51,7 +51,7 @@ PermissionLevel get_permission_level() {
   return level;
 }
 
-int db_connect() {
+bool db_connect() {
   // create connection string
   char *conn;
   asprintf(&conn, "user=%s password=%s port=%s host=%s dbname=%s",
@@ -68,9 +68,9 @@ int db_connect() {
   }
   if (PQstatus(DB_STATE->conn) != CONNECTION_OK) {
     g_printerr("%s", PQerrorMessage(DB_STATE->conn));
-    return 1;
+    return false;
   }
   // update UI according permission_level
   DB_STATE->permission_level = get_permission_level();
-  return 0;
+  return true;
 }

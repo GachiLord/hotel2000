@@ -18,7 +18,7 @@ static WidgetState state;
 static UserArray *read_users() {
   PGresult *res = PQexec(DB_STATE->conn, "SELECT * FROM read_users()");
 
-  if (handle_db_error(res, "Не удалось выполнить запрос") != 0) {
+  if (handle_db_error(res, "Не удалось выполнить запрос") == false) {
     return NULL;
   }
 
@@ -42,24 +42,24 @@ static UserArray *read_users() {
   return arr;
 }
 
-static int delete_user(const char *login) {
+static bool delete_user(const char *login) {
   char *query;
   asprintf(&query, "call delete_user('%s')", login);
 
   PGresult *res = PQexec(DB_STATE->conn, query);
   g_free(query);
 
-  if (handle_db_error(res, "Недостаточно прав для удаления") != 0) {
-    return -1;
+  if (handle_db_error(res, "Недостаточно прав для удаления") == false) {
+    return false;
   }
   PQclear(res);
   show_toast("Пользователь удален");
-  return 0;
+  return true;
 }
 
 static void handle_delete(GtkWidget *_, gpointer data) {
   int index = GPOINTER_TO_INT(data);
-  if (delete_user(state.users->arr[index].login) == 0) {
+  if (delete_user(state.users->arr[index].login)) {
     GtkListBoxRow *row = gtk_list_box_get_row_at_index(state.list, index);
     GtkWidget *label = gtk_label_new("Удалено");
     gtk_widget_set_size_request(label, 500, 40);

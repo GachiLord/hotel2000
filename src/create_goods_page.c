@@ -13,7 +13,7 @@ WidgetState state;
 
 // logic
 
-static int create_item(const char *title, double price) {
+static bool create_item(const char *title, double price) {
   char *query;
   asprintf(&query, "call create_item('%s', %lf::float8::numeric::money)", title,
            price);
@@ -21,19 +21,19 @@ static int create_item(const char *title, double price) {
   PGresult *res = PQexec(DB_STATE->conn, query);
   g_free(query);
 
-  if (handle_db_error(res, "Не удалось выполнить запрос") != 0) {
-    return -1;
+  if (handle_db_error(res, "Не удалось выполнить запрос") == false) {
+    return false;
   }
   PQclear(res);
   show_toast("Товар успешно создан");
-  return 0;
+  return true;
 }
 
 static void handle_create(GtkWidget *_, gpointer __) {
   int res = create_item(gtk_editable_get_text(state.title),
                         gtk_spin_button_get_value_as_int(state.spin_button));
 
-  if (res == 0) {
+  if (res) {
     gtk_editable_delete_text(state.title, 0, -1);
     gtk_spin_button_set_value(state.spin_button, 1000.0);
   }

@@ -26,7 +26,7 @@ static char *get_report(const char *start_d, const char *end_d) {
   PGresult *res = PQexec(DB_STATE->conn, query);
   g_free(query);
 
-  if (handle_db_error(res, "Не удалось создать отчет") != 0) {
+  if (handle_db_error(res, "Не удалось создать отчет") == false) {
     return NULL;
   }
   char *output = g_strdup(PQgetvalue(res, 0, 0));

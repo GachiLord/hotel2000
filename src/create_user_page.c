@@ -4,17 +4,17 @@
 
 // logic
 
-static int create_user(const char *login, PermissionLevel role,
-                       const char *password) {
+static bool create_user(const char *login, PermissionLevel role,
+                        const char *password) {
   char *query;
   asprintf(&query, "call create_user ('%s', '%s', %d)", login, password, role);
 
   PGresult *res = PQexec(DB_STATE->conn, query);
   g_free(query);
 
-  int res_code = handle_db_error(res, "Не удалось создать пользователя");
+  bool res_code = handle_db_error(res, "Не удалось создать пользователя");
 
-  if (res_code == 0) {
+  if (res_code) {
     PQclear(res);
     show_toast("Пользователь создан");
   }
@@ -47,7 +47,7 @@ static void create_handler(GtkWidget *_, gpointer __) {
   else if (gtk_check_button_get_active(state.manager))
     level = MANAGER;
 
-  if (create_user(name, level, passport) == 0) {
+  if (create_user(name, level, passport)) {
     gtk_editable_delete_text(GTK_EDITABLE(state.name), 0, -1);
     gtk_editable_delete_text(GTK_EDITABLE(state.passport), 0, -1);
   }

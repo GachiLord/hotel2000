@@ -30,7 +30,7 @@ static PersonArray *find_guests_by_name(const char *name) {
   PGresult *res = PQexec(DB_STATE->conn, query);
   g_free(query);
 
-  if (handle_db_error(res, "Не удалось выполнить запрос") != 0) {
+  if (handle_db_error(res, "Не удалось выполнить запрос") == false) {
     return NULL;
   }
 

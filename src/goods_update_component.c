@@ -25,7 +25,7 @@ static Item read_item(const char *item_id) {
   PGresult *res = PQexec(DB_STATE->conn, query);
   g_free(query);
 
-  if (handle_db_error(res, "Не удалось выполнить запрос") != 0) {
+  if (handle_db_error(res, "Не удалось выполнить запрос") == false) {
     return (Item){};
   }
 
@@ -41,7 +41,7 @@ static Item read_item(const char *item_id) {
   return (Item){id, title, price_numeric};
 }
 
-static int update_item(const char *item_id, const char *title, double price) {
+static bool update_item(const char *item_id, const char *title, double price) {
   char *query;
   asprintf(&query, "call update_item(%s, '%s', %lf::float8::numeric::money)",
            item_id, title, price);
@@ -49,12 +49,12 @@ static int update_item(const char *item_id, const char *title, double price) {
   PGresult *res = PQexec(DB_STATE->conn, query);
   g_free(query);
 
-  if (handle_db_error(res, "Не удалось выполнить запрос") != 0) {
-    return -1;
+  if (handle_db_error(res, "Не удалось выполнить запрос") == false) {
+    return false;
   }
   PQclear(res);
   show_toast("Изменения сохранены");
-  return 0;
+  return true;
 }
 
 static void handle_update(GtkWidget *_, gpointer state) {
@@ -62,9 +62,9 @@ static void handle_update(GtkWidget *_, gpointer state) {
 
   const char *title = gtk_editable_get_text(s->title);
   double price = gtk_spin_button_get_value_as_int(s->price);
-  int res = update_item(s->item_id, title, price);
+  bool res = update_item(s->item_id, title, price);
 
-  if (res == 0 && s->update_handler != NULL) {
+  if (res && s->update_handler != NULL) {
     s->update_handler(title, price, s->update_handler_data);
   }
 }

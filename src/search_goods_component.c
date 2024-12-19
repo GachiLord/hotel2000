@@ -28,7 +28,7 @@ static ItemArray *find_items_by_name(const char *title) {
   PGresult *res = PQexec(DB_STATE->conn, query);
   g_free(query);
 
-  if (handle_db_error(res, "Не удалось выполнить запрос") != 0) {
+  if (handle_db_error(res, "Не удалось выполнить запрос") == false) {
     return NULL;
   }
 

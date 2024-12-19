@@ -5,8 +5,8 @@
 
 // logic
 
-static int create_guest(const char *name, const char *phone,
-                        const char *passport) {
+static bool create_guest(const char *name, const char *phone,
+                         const char *passport) {
   char *query;
   asprintf(&query, "call create_guest ('%s', '%s', '%s')", name, passport,
            phone);
@@ -14,9 +14,9 @@ static int create_guest(const char *name, const char *phone,
   PGresult *res = PQexec(DB_STATE->conn, query);
   g_free(query);
 
-  int res_code = handle_db_error(res, "Не удалось создать гостя");
+  bool res_code = handle_db_error(res, "Не удалось создать гостя");
 
-  if (res_code == 0) {
+  if (res_code == true) {
     PQclear(res);
     show_toast("Гость создан");
   }
@@ -42,7 +42,7 @@ static void create_handler(GtkWidget *_, gpointer __) {
   const char *phone = gtk_editable_get_text(GTK_EDITABLE(state.phone));
   const char *passport = gtk_editable_get_text(GTK_EDITABLE(state.passport));
 
-  if (create_guest(name, phone, passport) == 0) {
+  if (create_guest(name, phone, passport)) {
     gtk_editable_delete_text(GTK_EDITABLE(state.name), 0, -1);
     gtk_editable_delete_text(GTK_EDITABLE(state.phone), 0, -1);
     gtk_editable_delete_text(GTK_EDITABLE(state.passport), 0, -1);

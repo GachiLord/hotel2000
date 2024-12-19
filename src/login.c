@@ -4,7 +4,7 @@
 #include <gtk/gtk.h>
 
 static void login_handler(GtkWidget *widget, gpointer data) {
-  if (db_connect() == 0) {
+  if (db_connect()) {
     // set pages on MAIN_STACK
     set_pages_according_to_permission_level();
     // show home

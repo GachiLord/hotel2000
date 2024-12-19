@@ -43,13 +43,13 @@ void show_toast(const char *text) {
   g_timeout_add(2000, remove_overlay, NULL);
 }
 
-int handle_db_error(PGresult *res, const char *const err_msg) {
+bool handle_db_error(PGresult *res, const char *const err_msg) {
   int c = PQresultStatus(res);
   if (c != PGRES_TUPLES_OK && c != PGRES_COMMAND_OK) {
     g_printerr("Query failed: %s", PQerrorMessage(DB_STATE->conn));
     show_toast(err_msg);
     PQclear(res);
-    return 1;
+    return false;
   }
-  return 0;
+  return true;
 }

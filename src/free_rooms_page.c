@@ -15,7 +15,7 @@ static RoomArray *get_free_rooms(int occupancy) {
   PGresult *res = PQexec(DB_STATE->conn, query);
   g_free(query);
   // check for error
-  if (handle_db_error(res, "Не удалось выполнить запрос") != 0) {
+  if (handle_db_error(res, "Не удалось выполнить запрос") == false) {
     return NULL;
   }
   // create Room structs

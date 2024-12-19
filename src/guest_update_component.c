@@ -42,7 +42,7 @@ static Person *get_guest(const char *guest_id) {
   PGresult *res = PQexec(DB_STATE->conn, query);
   g_free(query);
 
-  if (handle_db_error(res, "Не удалось выполнить запрос") != 0) {
+  if (handle_db_error(res, "Не удалось выполнить запрос") == false) {
     return NULL;
   }
 
@@ -58,8 +58,8 @@ static Person *get_guest(const char *guest_id) {
   return p;
 }
 
-static int update_guest(const char *guest_id, const char *name,
-                        const char *passport, const char *phone) {
+static bool update_guest(const char *guest_id, const char *name,
+                         const char *passport, const char *phone) {
   char *query;
   asprintf(&query, "call update_guest(%s, '%s', '%s', '%s')", guest_id, name,
            passport, phone);
@@ -67,12 +67,12 @@ static int update_guest(const char *guest_id, const char *name,
   PGresult *res = PQexec(DB_STATE->conn, query);
   g_free(query);
 
-  if (handle_db_error(res, "Не удалось выполнить запрос") != 0) {
-    return -1;
+  if (handle_db_error(res, "Не удалось выполнить запрос") == false) {
+    return false;
   }
   PQclear(res);
   show_toast("Данные обновлены");
-  return 0;
+  return true;
 }
 
 static void handle_save(GtkWidget *_, gpointer state) {
@@ -81,31 +81,31 @@ static void handle_save(GtkWidget *_, gpointer state) {
   const char *passport = gtk_editable_get_text(GTK_EDITABLE(s->passport));
   const char *phone = gtk_editable_get_text(GTK_EDITABLE(s->phone));
 
-  if (update_guest(s->guest_id, name, passport, phone) == 0 &&
+  if (update_guest(s->guest_id, name, passport, phone) &&
       s->update_handler != NULL) {
     s->update_handler(name, passport, phone, s->update_handler_data);
   }
 }
 
-static int check_out(const char *guest_id) {
+static bool check_out(const char *guest_id) {
   char *query;
   asprintf(&query, "call check_out_guest(%s)", guest_id);
 
   PGresult *res = PQexec(DB_STATE->conn, query);
   g_free(query);
 
-  if (handle_db_error(res, "Не удалось выполнить запрос") != 0) {
-    return -1;
+  if (handle_db_error(res, "Не удалось выполнить запрос") == false) {
+    return false;
   }
   PQclear(res);
   show_toast("Операция выполнена");
-  return 0;
+  return true;
 }
 
 static void handle_checkout(GtkWidget *_, gpointer state) {
   WidgetState *s = (WidgetState *)state;
 
-  if (check_out(s->guest_id) != 0)
+  if (check_out(s->guest_id) == false)
     return;
 
   remove_widget_from_main_stack(s->component, s->parent);
@@ -120,7 +120,7 @@ static OrderArray *get_guest_orders(const char *guest_id) {
   PGresult *res = PQexec(DB_STATE->conn, query);
   g_free(query);
 
-  if (handle_db_error(res, "Не удалось выполнить запрос") != 0) {
+  if (handle_db_error(res, "Не удалось выполнить запрос") == false) {
     return NULL;
   }
 
@@ -166,7 +166,7 @@ static int create_order(const char *guest_id, const char *item_id,
   PGresult *res = PQexec(DB_STATE->conn, query);
   g_free(query);
 
-  if (handle_db_error(res, "Не удалось выполнить запрос")) {
+  if (handle_db_error(res, "Не удалось выполнить запрос") == false) {
     return -1;
   }
 
@@ -177,8 +177,8 @@ static int create_order(const char *guest_id, const char *item_id,
   return id;
 }
 
-static int update_order(const char *order_id, double sold_for, int amount,
-                        bool has_paid) {
+static bool update_order(const char *order_id, double sold_for, int amount,
+                         bool has_paid) {
   char *query;
   asprintf(&query,
            "call update_order(%s, %lf::float8::numeric::money, %d, "
@@ -188,31 +188,31 @@ static int update_order(const char *order_id, double sold_for, int amount,
   PGresult *res = PQexec(DB_STATE->conn, query);
   g_free(query);
 
-  if (handle_db_error(res, "Не удалось выполнить запрос") != 0) {
-    return -1;
+  if (handle_db_error(res, "Не удалось выполнить запрос") == false) {
+    return false;
   }
 
   show_toast("Изменения сохранены");
   PQclear(res);
 
-  return 0;
+  return true;
 }
 
-static int delete_order(const char *order_id) {
+static bool delete_order(const char *order_id) {
   char *query;
   asprintf(&query, "call delete_order(%s)", order_id);
 
   PGresult *res = PQexec(DB_STATE->conn, query);
   g_free(query);
 
-  if (handle_db_error(res, "Не удалось выполнить запрос") != 0) {
-    return -1;
+  if (handle_db_error(res, "Не удалось выполнить запрос") == false) {
+    return false;
   }
 
   show_toast("Заказ удален");
   PQclear(res);
 
-  return 0;
+  return true;
 }
 
 static void handle_item_save(GtkWidget *widget, gpointer state) {
@@ -246,7 +246,7 @@ static void handle_item_delete(GtkWidget *widget, gpointer state) {
   const char *order_id = s->orders->arr[row_index].order_id;
 
   // remove from db
-  if (delete_order(order_id) != 0)
+  if (delete_order(order_id) == false)
     return;
   // update state
   remove_order_array(s->orders, row_index);

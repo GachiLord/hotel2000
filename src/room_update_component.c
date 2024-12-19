@@ -28,7 +28,7 @@ static PersonArray *list_room_guests(const char *room_id) {
   PGresult *res = PQexec(DB_STATE->conn, query);
   g_free(query);
 
-  if (handle_db_error(res, "Не удалось выполнить запрос") != 0) {
+  if (handle_db_error(res, "Не удалось выполнить запрос") == false) {
     return NULL;
   }
 
@@ -55,34 +55,34 @@ static PersonArray *list_room_guests(const char *room_id) {
 
 // manipulate current users
 
-static int add_guest_to_room(const char *room_id, const char *guest_id) {
+static bool add_guest_to_room(const char *room_id, const char *guest_id) {
   char *query;
   asprintf(&query, "call check_in_guest(%s, %s)", guest_id, room_id);
 
   PGresult *res = PQexec(DB_STATE->conn, query);
   g_free(query);
 
-  if (handle_db_error(res, "Не удалось добавить гостя") != 0) {
-    return -1;
+  if (handle_db_error(res, "Не удалось добавить гостя") == false) {
+    return false;
   }
 
   PQclear(res);
-  return 0;
+  return true;
 }
 
-static int remove_guest_from_room(const char *room_id, const char *guest_id) {
+static bool remove_guest_from_room(const char *room_id, const char *guest_id) {
   char *query;
   asprintf(&query, "call check_out_guest(%s, %s)", guest_id, room_id);
 
   PGresult *res = PQexec(DB_STATE->conn, query);
   g_free(query);
 
-  if (handle_db_error(res, "Не удалось удалить гостя") != 0) {
-    return -1;
+  if (handle_db_error(res, "Не удалось удалить гостя") == false) {
+    return false;
   }
 
   PQclear(res);
-  return 0;
+  return true;
 }
 
 static void handle_guest_update(const char *name, const char *passport,
@@ -116,7 +116,7 @@ static void handle_guest_click(GtkListBox *_, GtkListBoxRow *row,
   int index = gtk_list_box_row_get_index(row);
   const char *guest_id = s->arr->guests[index].id;
   if (s->is_delete_mode) {
-    if (remove_guest_from_room(s->room_id, guest_id) == 0) {
+    if (remove_guest_from_room(s->room_id, guest_id)) {
       remove_person_array(s->arr, index);
       render_guests_to_list(GTK_LIST_BOX(s->list), GTK_FRAME(s->frame), s->arr,
                             true);
@@ -142,7 +142,7 @@ static void handle_new_guest_choose(GtkListBoxRow *_, const Person guest,
   // create guests copy
   Person p = person_copy(guest);
   // add guest into room in db
-  if (add_guest_to_room(s->room_id, p.id) != 0) {
+  if (add_guest_to_room(s->room_id, p.id) == false) {
     return;
   }
   // add to array
