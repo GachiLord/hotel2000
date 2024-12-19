@@ -86,8 +86,10 @@ static void load_conf() {
   }
 
 free:
-  g_object_unref(file);
-  g_object_unref(info);
+  if (file != NULL)
+    g_object_unref(file);
+  if (info != NULL)
+    g_object_unref(info);
   g_free(buf);
 }
 
@@ -115,7 +117,7 @@ void init_db_state() {
   DB_STATE->permission_level = VIEWER;
   DB_STATE->conn = NULL;
   DB_STATE->user = g_strdup("postgres");
-  DB_STATE->password = g_strdup("root");
+  DB_STATE->password = g_strdup("");
   DB_STATE->port = g_strdup("5432");
   DB_STATE->host = g_strdup("localhost");
   DB_STATE->database = g_strdup("hotel2000");
@@ -155,6 +157,7 @@ bool db_connect() {
   }
   if (PQstatus(DB_STATE->conn) != CONNECTION_OK) {
     g_printerr("%s", PQerrorMessage(DB_STATE->conn));
+    PQfinish(DB_STATE->conn);
     return false;
   }
   // update UI according permission_level
