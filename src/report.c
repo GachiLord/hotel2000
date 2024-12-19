@@ -46,6 +46,7 @@ void handle_save_report(GObject *source_object, GAsyncResult *res,
   else
     show_toast("Не удалось сохранить файл");
 
+  g_object_unref(file);
   g_free(report);
   g_free(html.html);
 }

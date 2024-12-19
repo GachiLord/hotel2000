@@ -10,3 +10,4 @@ hotel2000
 *.obj
 *.exe
 build
+conf.txt

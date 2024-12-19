@@ -15,5 +15,6 @@ typedef struct {
 
 bool db_connect();
 
+void store_conf();
 void init_db_state();
 void free_db_state();

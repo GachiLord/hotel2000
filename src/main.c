@@ -1,4 +1,4 @@
-#include "asprintf.h" // this muts be included before stdio
+#include "asprintf.h" // this must be included before stdio
 #include "database.h"
 #include "pages.h"
 #include <gtk/gtk.h>
@@ -35,6 +35,8 @@ static void activate(GtkApplication *app, gpointer user_data) {
 
 void window_removed(GtkApplication *self, GtkWindow *window,
                     gpointer user_data) {
+  // store app's conf
+  store_conf();
   // free app's resources
   free_db_state();
 }
