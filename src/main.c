@@ -12,7 +12,8 @@ static void activate(GtkApplication *app, gpointer user_data) {
   // init app's window
   APP_WINDOW = gtk_application_window_new(app);
   gtk_window_set_title(GTK_WINDOW(APP_WINDOW), "Hotel2000");
-  gtk_window_set_default_size(GTK_WINDOW(APP_WINDOW), 1000, 700);
+  gtk_window_set_default_size(GTK_WINDOW(APP_WINDOW), 1000, 900);
+  gtk_window_set_resizable(GTK_WINDOW(APP_WINDOW), false);
   // add css
   GtkCssProvider *css_provider = gtk_css_provider_new();
   gtk_css_provider_load_from_string(

@@ -57,11 +57,22 @@ static void load_conf() {
   GFileInfo *info = g_file_query_info(file, G_FILE_ATTRIBUTE_STANDARD_SIZE,
                                       G_FILE_QUERY_INFO_NONE, NULL, NULL);
 
-  if (info == NULL || g_file_info_get_size(info) > 2048)
-    goto free;
+  if (info == NULL || g_file_info_get_size(info) > 2048) {
+    if (file != NULL)
+      g_object_unref(file);
+    if (info != NULL)
+      g_object_unref(info);
+    return;
+  }
 
-  if (g_file_load_contents(file, NULL, &buf, &len, NULL, NULL) == false)
-    goto free;
+  if (g_file_load_contents(file, NULL, &buf, &len, NULL, NULL) == false) {
+    if (file != NULL)
+      g_object_unref(file);
+    if (info != NULL)
+      g_object_unref(info);
+    g_free(buf);
+    return;
+  }
 
   // update state
   char field = 0;
@@ -84,13 +95,15 @@ static void load_conf() {
     token = strtok(NULL, "\n");
     field++;
   }
-
-free:
+  
   if (file != NULL)
     g_object_unref(file);
   if (info != NULL)
     g_object_unref(info);
   g_free(buf);
+
+  return;
+
 }
 
 void store_conf() {
@@ -143,7 +156,7 @@ PermissionLevel get_permission_level() {
 bool db_connect() {
   // create connection string
   char *conn;
-  asprintf(&conn, "user=%s password=%s port=%s host=%s dbname=%s",
+  asprintf(&conn, "user='%s' password='%s' port='%s' host='%s' dbname='%s'",
            DB_STATE->user, DB_STATE->password, DB_STATE->port, DB_STATE->host,
            DB_STATE->database);
   // start connection and save params
@@ -160,7 +173,7 @@ bool db_connect() {
     PQfinish(DB_STATE->conn);
     return false;
   }
-  // update UI according permission_level
+  // state's permission_level
   DB_STATE->permission_level = get_permission_level();
   return true;
 }

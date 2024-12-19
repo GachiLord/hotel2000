@@ -16,9 +16,9 @@ typedef struct {
   GtkWidget *component;
   GtkWidget *parent;
   // user
-  GtkLabel *name;
-  GtkLabel *passport;
-  GtkLabel *phone;
+  GtkEntry *name;
+  GtkEntry *passport;
+  GtkEntry *phone;
   // orders
   GtkListBox *list;
   GtkFrame *frame;
@@ -498,9 +498,9 @@ GtkWidget *guest_update_component(const char *guest_id, GtkWidget *parent,
   // init state
   WidgetState *state = g_malloc(sizeof(WidgetState));
   state->component = main_box_wrapper;
-  state->name = GTK_LABEL(name);
-  state->passport = GTK_LABEL(passport);
-  state->phone = GTK_LABEL(phone);
+  state->name = GTK_ENTRY(name);
+  state->passport = GTK_ENTRY(passport);
+  state->phone = GTK_ENTRY(phone);
   state->list = GTK_LIST_BOX(list);
   state->frame = GTK_FRAME(frame);
   state->parent = parent;
