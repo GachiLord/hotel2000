@@ -313,16 +313,16 @@ AS $$
 BEGIN
   RETURN QUERY SELECT json_build_object(
     'orders', (
-      SELECT json_agg(row_to_json( (SELECT r FROM (SELECT sold_for::money::numeric::float8, title, amount, created_at) r) )) 
+      SELECT json_agg(row_to_json( (SELECT r FROM (SELECT sold_for::money::numeric::float8, title, amount, created_at) r) ) ORDER BY created_at ASC) 
         FROM orders INNER JOIN goods ON orders.item_id = goods.item_id
         WHERE created_at >= start_date AND created_at <= end_date
     ),
     'check_ins', (
-      SELECT json_agg(guest_journal ORDER BY created_at) FROM guest_journal
+      SELECT json_agg(guest_journal ORDER BY created_at ASC) FROM guest_journal
         WHERE is_check_in = true AND created_at >= start_date AND created_at <= end_date 
       ),
     'check_outs', (
-      SELECT json_agg(guest_journal ORDER BY created_at) FROM guest_journal 
+      SELECT json_agg(guest_journal ORDER BY created_at ASC) FROM guest_journal 
         WHERE is_check_in = false AND created_at >= start_date AND created_at <= end_date 
       )
   );

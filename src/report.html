@@ -13,6 +13,9 @@
     <h3 id="orders_count"></h3>
     <h3 id="orders_sum"></h3>
     <div style="height: 80vh; display: flex; justify-content: center;">
+      <canvas id="orders_income"></canvas>
+    </div>
+    <div style="height: 80vh; display: flex; justify-content: center;">
       <canvas id="orders_graph"></canvas>
     </div>
 
@@ -30,7 +33,7 @@
 
   <script>
     // chart js library
-    % s
+    %s
   </script>
 
   <script>
@@ -41,24 +44,24 @@
     report["check_outs"] = report["check_outs"] ?? [];
     report["orders"] = report["orders"] ?? [];
 
-    function groupByDate(arr) {
+    function groupByDate(arr, callback) {
       const labels = [];
       const data = [];
 
-      arr.forEach(({created_at, amount}) => {
-        const d = new Date(created_at);
+      arr.forEach((item) => {
+        const d = new Date(item.created_at);
         const l = labels.at(-1);
 
         if (l === undefined || (l.getMonth() !== d.getMonth() || l.getYear() !== d.getYear())) {
           labels.push(d);
-          data.push(1);
+          data.push(callback ? callback(item) : 1);
         } else {
-          data[data.length - 1] += amount ?? 1;
+          data[data.length - 1] += callback ? callback(item) : 1;
         }
 
       });
 
-      return {labels: labels.map(item => item.toLocaleString(undefined, {month: "long"})), data}
+      return {labels: labels.map(item => item.toLocaleString(undefined, {month: "long", year: "numeric"})), data}
     }
 
     // render check_in/out stats
@@ -99,24 +102,46 @@
     // render orders stats
 
     {
-      const check_in_sum = document.getElementById("orders_sum");
-      const check_in_count = document.getElementById("orders_count");
+      const orders_sum = document.getElementById("orders_sum");
+      const orders_count = document.getElementById("orders_count");
 
-      check_in_count.textContent = `Всего заказов: ${report["orders"].length}`;
-      check_in_sum.textContent = `Всего заработано: ${report["orders"].reduce((acc, item) => acc + item.sold_for, 0)}`;
+      orders_count.textContent = `Всего заказов: ${report["orders"].length}`;
+      orders_sum.textContent = `Всего заработано: ${report["orders"].reduce((acc, item) => acc + item.sold_for, 0)}`;
 
       const ctx = document.getElementById('orders_graph');
-      const config_orders = groupByDate(report["orders"]);
+      const config_orders = groupByDate(report["orders"], item => item.amount);
 
       new Chart(ctx, {
         type: 'line',
         data: {
           labels: config_orders.labels,
           datasets: [{
-            label: 'Заказы',
+            label: 'Количество заказов',
             data: config_orders.data,
             fill: false,
             borderColor: 'rgb(75, 192, 192)',
+            tension: 0.1
+          },
+          ]
+        },
+      });
+    }
+
+    // render orders sum per month
+
+    {
+      const ctx = document.getElementById('orders_income');
+      const config = groupByDate(report["orders"], item => item.amount * item.sold_for);
+
+
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: config.labels,
+          datasets: [{
+            label: 'Доход от заказов',
+            data: config.data,
+            fill: false,
             tension: 0.1
           },
           ]
