@@ -156,7 +156,7 @@ PermissionLevel get_permission_level() {
 bool db_connect() {
   // create connection string
   char *conn;
-  asprintf(&conn, "user=%s password=%s port=%s host=%s dbname=%s",
+  asprintf(&conn, "user='%s' password='%s' port='%s' host='%s' dbname='%s'",
            DB_STATE->user, DB_STATE->password, DB_STATE->port, DB_STATE->host,
            DB_STATE->database);
   // start connection and save params
@@ -173,7 +173,7 @@ bool db_connect() {
     PQfinish(DB_STATE->conn);
     return false;
   }
-  // update UI according permission_level
+  // state's permission_level
   DB_STATE->permission_level = get_permission_level();
   return true;
 }
