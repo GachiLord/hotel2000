@@ -83,7 +83,7 @@ static void handle_save(GtkWidget *_, gpointer state) {
 
   if (update_guest(s->guest_id, name, passport, phone) &&
       s->update_handler != NULL) {
-    s->update_handler(name, passport, phone, s->update_handler_data);
+    s->update_handler(name, passport, phone, false, s->update_handler_data);
   }
 }
 
@@ -108,6 +108,7 @@ static void handle_checkout(GtkWidget *_, gpointer state) {
   if (check_out(s->guest_id) == false)
     return;
 
+  s->update_handler(NULL, NULL, NULL, true, s->update_handler_data);
   remove_widget_from_main_stack(s->component, s->parent);
 }
 

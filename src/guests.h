@@ -29,7 +29,8 @@ PersonArray *remove_person_array(PersonArray *self, gsize index);
 typedef void (*GuestClickHandler)(GtkListBoxRow *row, const Person guest,
                                   gpointer data);
 typedef void (*GuestUpdateHandler)(const char *name, const char *passport,
-                                   const char *phone, gpointer data);
+                                   const char *phone, bool deleted,
+                                   gpointer data);
 
 GtkWidget *create_guests_page();
 GtkWidget *search_guests_page();

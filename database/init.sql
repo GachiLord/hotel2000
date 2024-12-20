@@ -139,7 +139,17 @@ CREATE OR REPLACE PROCEDURE check_in_guest (
 LANGUAGE PLPGSQL
 AS $$
 BEGIN
+  DELETE FROM rooms_guests WHERE rooms_guests.guest_id = check_in_guest.guest_id;
   INSERT INTO rooms_guests(guest_id, room_id) VALUES(guest_id, room_id);
+END;$$;
+
+CREATE OR REPLACE PROCEDURE remove_room_guests(
+  guest_id int
+)
+LANGUAGE PLPGSQL
+AS $$
+BEGIN
+  DELETE FROM rooms_guests WHERE rooms_guests.guest_id = remove_room_guests.guest_id;
 END;$$;
 
 CREATE OR REPLACE PROCEDURE check_out_guest (
@@ -322,7 +332,7 @@ BEGIN
         WHERE is_check_in = true AND created_at >= start_date AND created_at <= end_date 
       ),
     'check_outs', (
-      SELECT json_agg(guest_journal ORDER BY created_at ASC) FROM guest_journal 
+      SELECT json_agg(guest_journal ORDER BY created_at) FROM guest_journal 
         WHERE is_check_in = false AND created_at >= start_date AND created_at <= end_date 
       )
   );

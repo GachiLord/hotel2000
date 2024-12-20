@@ -8,9 +8,16 @@
 // logic
 
 static void handle_update(const char *name, const char *passport,
-                          const char *phone, gpointer data) {
+                          const char *phone, bool deleted, gpointer data) {
   GtkListBoxRow *row = GTK_LIST_BOX_ROW(data);
   GtkCenterBox *box = GTK_CENTER_BOX(gtk_list_box_row_get_child(row));
+
+  if (deleted) {
+    gtk_list_box_row_set_child(row, gtk_label_new("Удалено"));
+    gtk_widget_set_size_request(GTK_WIDGET(row), GUESTS_DEFAULT_WIDTH, 50);
+    gtk_widget_set_sensitive(GTK_WIDGET(row), false);
+    return;
+  }
 
   GtkLabel *name_l = GTK_LABEL(gtk_center_box_get_start_widget(box));
   GtkLabel *passport_l = GTK_LABEL(gtk_center_box_get_center_widget(box));
