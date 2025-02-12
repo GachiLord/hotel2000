@@ -355,6 +355,7 @@ static void handle_order_choose(GtkListBoxRow *_, const Item item,
   asprintf(&order.order_id, "%d", order_id);
   order.title = g_strdup(item.title);
   order.sold_for = item.price;
+  order.amount = 0;
   order.has_paid = false;
   if (s->orders == NULL) {
     s->orders = new_order_array(1);
